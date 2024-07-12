@@ -1,0 +1,173 @@
+import React from 'react'
+import Header from '../../components/Header/Header';
+import FileExplorer from '../../components/FileExplorer/FileExplorer';
+import Options from '../../components/Options/Options';
+import ItemInfo from '../../components/DirItemInfo/ItemInfo';
+import { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
+import axios from "axios";
+import fileDownload from 'js-file-download';
+import { useParams, useNavigate } from 'react-router-dom';
+
+const ExplorerPage = () => {
+  const params = useParams();
+  const navigate = useNavigate();
+  const [path, setPath] = useState(params.path);
+  const [directory, setDir] = useState([]);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [itemInfo, setItemInfo] = useState({});
+  const [response, setRes] = useState("");
+
+  function getParent(filePath) {
+    console.log(filePath);
+    let lastIndex = filePath.lastIndexOf('/');
+    if (lastIndex === -1) return filePath;
+
+    let item = filePath.slice(0, lastIndex);
+
+    if (item.length > 1) {
+      return item;
+    } else {
+      return filePath.slice(0, lastIndex + 1);
+    }
+  }
+
+  useEffect(() => {
+    navigate(`/explorer/${encodeURIComponent(path)}`, { replace: true });
+  }, [path])
+
+  useEffect(() => {
+    console.log(getParent(path));
+    if (Cookies.get("ip") && Cookies.get("password")) {
+      readDir()
+    } else {
+      navigate("/login")
+    }
+  }, [])
+
+  function moveItem(oldPath, newPath) {
+    console.log("Old and newPath");
+    console.log(oldPath);
+    console.log(newPath);
+    axios.get(`${Cookies.get("ip")}/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath.slice(1)}&newFilepath=${newPath.slice(1)}&type=move`)
+    .then((data) => {
+      console.log(data);
+      readDir();
+    })
+  }
+
+  function renameItem(item, newName) {
+    console.log("item and newName");
+    console.log(item);
+    console.log(newName);
+    let oldPath = item.path.slice(1);
+    let newPath = `${getParent(item.path.slice(0, -1))}/${newName}`;
+    console.log("USeLES GET PARENT");
+    console.log(item.path.slice(0, -1));
+    console.log(getParent(item.path.slice(0, -1)));
+    console.log("Old path and New path");
+    console.log(oldPath);
+    console.log(newPath.slice(1));
+         //setPath(`.${newPath}`)
+    axios.get(`${Cookies.get("ip")}/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath}&newFilepath=${newPath.slice(1)}&type=rename`)
+    .then((data) => {
+      console.log(data);
+      console.log(newPath);
+      if (item.isDirectory) {
+        readDir(false, newPath);
+      } else {
+        readDir()
+      }
+    })
+  }
+  
+  function downloadFile(filepath) {
+    axios.get(`${Cookies.get("ip")}/download?password=${Cookies.get("password")}&filepath=${filepath.slice(1)}`,{
+      responseType: "blob"
+    }).then((data) => {
+      console.log(data);
+      fileDownload(data.data, itemInfo.name)
+    })
+  }
+  
+  function readDir(asParentPath, pathInput) {
+    if (asParentPath && path !== "./") {
+      setPath(getParent(path));
+      setIsEmpty(false)
+      setDir([]);
+      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${getParent(path).slice(1)}`).then((data) => {
+        console.log(data);
+        setIsEmpty(data.data.isEmpty)
+        setDir(data.data.data)
+        setItemInfo(data.data.directoryInfo)
+      })
+      return;
+    } else if (pathInput === undefined && !asParentPath) {
+      setDir([]);
+      // if (path.slice(-1) !== "/") {
+      //   setPath((prev) => prev + "/")
+      // }
+      setIsEmpty(false)
+      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${path.slice(1)}`).then((data) => {
+        console.log(data);
+        if (!data.data.data) {
+          setRes(data.data.err)
+          return;
+        }
+        setIsEmpty(data.data.isEmpty);
+        setDir(data.data.data)
+        setItemInfo(data.data.directoryInfo)
+      })
+      return;
+    } else if (pathInput) {
+      setDir([]);
+      setIsEmpty(false)
+      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${pathInput.slice(1)}`).then((data) => {
+        console.log(data);
+        setPath(pathInput)
+        setIsEmpty(data.data.isEmpty);
+        setDir(data.data.data)
+        setItemInfo(data.data.directoryInfo)
+      })
+    }
+
+
+  }
+
+  return (
+    <div className='home-container'>
+      <Header />
+      <Options
+        path={path}
+        setPath={setPath}
+        readDir={readDir}
+      />
+      <div className="flex flex-row w-full justify-center items-center flex-wrap">
+        <FileExplorer
+          directory={directory}
+          setDir={setDir}
+          setItemInfo={setItemInfo}
+          isEmpty={isEmpty}
+          readDir={readDir}
+          path={path}
+          response={response}
+          moveItem={moveItem}
+          getParent={getParent}
+        />
+        {
+          Object.keys(itemInfo).length !== 0 ? (
+            <ItemInfo 
+            itemInfo={itemInfo}
+            setItemInfo={setItemInfo}
+            renameItem={renameItem}
+            downloadFile={downloadFile}
+            />
+          ) : null
+        }
+      </div>
+
+    </div>
+  )
+}
+
+export default ExplorerPage
