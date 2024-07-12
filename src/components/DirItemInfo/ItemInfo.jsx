@@ -1,4 +1,4 @@
-import React, {useRef} from 'react'
+import React, { useRef } from 'react'
 import moment from 'moment'
 import { FaFolder } from "react-icons/fa";
 import { FaFileAlt } from "react-icons/fa";
@@ -12,8 +12,8 @@ import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
 import Cookies from 'js-cookie';
 
-const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile }) => {
-  const renameInput = useRef(null) 
+const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress }) => {
+  const renameInput = useRef(null)
   const logoSize = 75;
   //const logoSize = "35vh"
   return (
@@ -98,13 +98,24 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile }) => {
             className='bg-red-600 px-6 font-bold rounded-xl'
             title='Double click to delete.'
           >Delete file</button>
-          <button
-            className='bg-emerald-600 px-6 font-bold rounded-xl'
-            title='Double click to upload.'
-            onDoubleClick={() => {
-              downloadFile(itemInfo.path)
-            }}
-          >Download</button>
+
+          {!downloadProgress ?
+            <button
+              className='bg-emerald-600 px-6 font-bold rounded-xl'
+              title='Double click to upload.'
+              onDoubleClick={() => {
+                downloadFile(itemInfo.path)
+              }}
+            >Download</button>
+            :
+            <div>
+              <h1 className="text-center">{downloadProgress === 100 ? "Downloaded" : "Downloading..."}</h1>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div className="bg-emerald-600 h-2.5 rounded-full" style={{ width: `${downloadProgress}%` }} />
+              </div>
+            </div>
+
+          }
           <a
             href={`/editor/${encodeURIComponent(itemInfo.path)}`}
             target="_blank"
@@ -119,7 +130,7 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile }) => {
             title='Double click to delete.'
           >Delete directory</button>
           <button
-            className='bg-violet-600 px-6 font-bold rounded-xl'
+            className='bg-purple-600 px-6 font-bold rounded-xl'
             title='Double click to upload.'
           >Upload new file</button>
           <div className="flex flex-row">

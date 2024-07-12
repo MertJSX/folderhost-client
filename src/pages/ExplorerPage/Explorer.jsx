@@ -17,6 +17,7 @@ const ExplorerPage = () => {
   const [isEmpty, setIsEmpty] = useState(false);
   const [itemInfo, setItemInfo] = useState({});
   const [response, setRes] = useState("");
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   function getParent(filePath) {
     console.log(filePath);
@@ -50,10 +51,10 @@ const ExplorerPage = () => {
     console.log(oldPath);
     console.log(newPath);
     axios.get(`${Cookies.get("ip")}/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath.slice(1)}&newFilepath=${newPath.slice(1)}&type=move`)
-    .then((data) => {
-      console.log(data);
-      readDir();
-    })
+      .then((data) => {
+        console.log(data);
+        readDir();
+      })
   }
 
   function renameItem(item, newName) {
@@ -68,28 +69,45 @@ const ExplorerPage = () => {
     console.log("Old path and New path");
     console.log(oldPath);
     console.log(newPath.slice(1));
-         //setPath(`.${newPath}`)
+    //setPath(`.${newPath}`)
     axios.get(`${Cookies.get("ip")}/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath}&newFilepath=${newPath.slice(1)}&type=rename`)
-    .then((data) => {
-      console.log(data);
-      console.log(newPath);
-      if (item.isDirectory) {
-        readDir(false, newPath);
-      } else {
-        readDir()
-      }
-    })
+      .then((data) => {
+        console.log(data);
+        console.log(newPath);
+        if (item.isDirectory) {
+          readDir(false, newPath);
+        } else {
+          readDir()
+        }
+      })
   }
-  
+
   function downloadFile(filepath) {
-    axios.get(`${Cookies.get("ip")}/download?password=${Cookies.get("password")}&filepath=${filepath.slice(1)}`,{
-      responseType: "blob"
+    axios.get(`${Cookies.get("ip")}/download?password=${Cookies.get("password")}&filepath=${filepath.slice(1)}`, {
+      responseType: "blob",
+      onDownloadProgress: (
+        progressEvent) => {
+        if (progressEvent.progress === 1) {
+          return;
+        }
+        let progress = progressEvent.progress.toString();
+        progress = progress.split('.')[1]; // Noktadan sonraki kısmı al
+        progress = progress.substring(0, 2);
+        console.log(`Downloading: ${progress}%`);
+        setDownloadProgress(Number(progress));
+      }
     }).then((data) => {
       console.log(data);
+      setTimeout(() => {
+        setDownloadProgress(100);
+      }, 1000);
+      setTimeout(() => {
+        setDownloadProgress(0);
+      }, 5000);
       fileDownload(data.data, itemInfo.name)
     })
   }
-  
+
   function readDir(asParentPath, pathInput) {
     if (asParentPath && path !== "./") {
       setPath(getParent(path));
@@ -156,11 +174,12 @@ const ExplorerPage = () => {
         />
         {
           Object.keys(itemInfo).length !== 0 ? (
-            <ItemInfo 
-            itemInfo={itemInfo}
-            setItemInfo={setItemInfo}
-            renameItem={renameItem}
-            downloadFile={downloadFile}
+            <ItemInfo
+              itemInfo={itemInfo}
+              setItemInfo={setItemInfo}
+              renameItem={renameItem}
+              downloadFile={downloadFile}
+              downloadProgress={downloadProgress}
             />
           ) : null
         }
