@@ -1,11 +1,12 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import DropdownMenu from '../Options/DropdownMenu';
 
 
 const Options = (props) => {
     const navigate = useNavigate();
     return (
-        <div className='flex bg-slate-800 flex-row justify-center w-full mt-14 gap-5 p-2'>
+        <div className='flex bg-slate-800 flex-col justify-center w-full mt-14 gap-5 p-2'>
             <div className='flex w-full justify-center'>
                 <input
                     type="text"
@@ -33,9 +34,13 @@ const Options = (props) => {
                     onClick={() => {
                         props.readDir()
                     }}
-                >Search</button>
+                >Refresh</button>
+                <DropdownMenu />
             </div>
-
+            {props.response ? 
+                <h1 className='text-emerald-400 text-2xl text-center'>{props.response}</h1>
+                : props.error ? <h1 className='text-red-500 text-2xl text-center'>{props.error}</h1> : null
+            }
         </div>
     )
 }
