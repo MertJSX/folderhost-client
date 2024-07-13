@@ -17,6 +17,7 @@ const ExplorerPage = () => {
   const [isEmpty, setIsEmpty] = useState(false);
   const [itemInfo, setItemInfo] = useState({});
   const [response, setRes] = useState("");
+  const [error, setError] = useState("");
   const [downloadProgress, setDownloadProgress] = useState(0);
 
   function getParent(filePath) {
@@ -58,22 +59,11 @@ const ExplorerPage = () => {
   }
 
   function renameItem(item, newName) {
-    console.log("item and newName");
-    console.log(item);
-    console.log(newName);
     let oldPath = item.path.slice(1);
     let newPath = `${getParent(item.path.slice(0, -1))}/${newName}`;
-    console.log("USeLES GET PARENT");
-    console.log(item.path.slice(0, -1));
-    console.log(getParent(item.path.slice(0, -1)));
-    console.log("Old path and New path");
-    console.log(oldPath);
-    console.log(newPath.slice(1));
-    //setPath(`.${newPath}`)
     axios.get(`${Cookies.get("ip")}/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath}&newFilepath=${newPath.slice(1)}&type=rename`)
       .then((data) => {
         console.log(data);
-        console.log(newPath);
         if (item.isDirectory) {
           readDir(false, newPath);
         } else {
@@ -93,7 +83,6 @@ const ExplorerPage = () => {
         let progress = progressEvent.progress.toString();
         progress = progress.split('.')[1]; // Noktadan sonraki kısmı al
         progress = progress.substring(0, 2);
-        console.log(`Downloading: ${progress}%`);
         setDownloadProgress(Number(progress));
       }
     }).then((data) => {
@@ -108,12 +97,35 @@ const ExplorerPage = () => {
     })
   }
 
+  function deleteItem(filepath) {
+    axios.get(`${Cookies.get("ip")}/delete?password=${Cookies.get("password")}&path=${filepath.slice(1)}`).then((data) => {
+      console.log(data);
+      if (data.data.response) {
+        setRes(data.data.response)
+        setTimeout(() => {
+          setRes("")
+        }, 5000);
+      }
+      
+      readDir()
+    }).catch((err) => {
+      console.error(err.response.data.err);
+      if (err.response.data.err) {
+        setError(err.response.data.err)
+        setTimeout(() => {
+          setError("")
+        }, 5000);
+      }
+    })
+  }
+
   function readDir(asParentPath, pathInput) {
     if (asParentPath && path !== "./") {
       setPath(getParent(path));
       setIsEmpty(false)
       setDir([]);
-      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${getParent(path).slice(1)}`).then((data) => {
+      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${getParent(path).slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`)
+      .then((data) => {
         console.log(data);
         setIsEmpty(data.data.isEmpty)
         setDir(data.data.data)
@@ -126,7 +138,7 @@ const ExplorerPage = () => {
       //   setPath((prev) => prev + "/")
       // }
       setIsEmpty(false)
-      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${path.slice(1)}`).then((data) => {
+      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${path.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`).then((data) => {
         console.log(data);
         if (!data.data.data) {
           setRes(data.data.err)
@@ -140,7 +152,7 @@ const ExplorerPage = () => {
     } else if (pathInput) {
       setDir([]);
       setIsEmpty(false)
-      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${pathInput.slice(1)}`).then((data) => {
+      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${pathInput.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`).then((data) => {
         console.log(data);
         setPath(pathInput)
         setIsEmpty(data.data.isEmpty);
@@ -159,6 +171,8 @@ const ExplorerPage = () => {
         path={path}
         setPath={setPath}
         readDir={readDir}
+        error={error}
+        response={response}
       />
       <div className="flex flex-row w-full justify-center items-center flex-wrap">
         <FileExplorer
@@ -180,6 +194,7 @@ const ExplorerPage = () => {
               renameItem={renameItem}
               downloadFile={downloadFile}
               downloadProgress={downloadProgress}
+              deleteItem={deleteItem}
             />
           ) : null
         }
