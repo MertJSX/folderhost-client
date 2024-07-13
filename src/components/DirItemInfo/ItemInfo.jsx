@@ -12,7 +12,7 @@ import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
 import Cookies from 'js-cookie';
 
-const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress }) => {
+const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem }) => {
   const renameInput = useRef(null)
   const logoSize = 75;
   //const logoSize = "35vh"
@@ -83,27 +83,37 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
       </h1>
       {
         itemInfo.size ? (
-          <h1 className='text-gray-400'>Size: <span className='text-amber-200'>{itemInfo.size}</span></h1>
+          <h1 className='text-gray-400'>Size:
+            <span className='text-amber-200'>
+              {
+                (itemInfo.size === "N/A" && Cookies.get("mode") === "Quality mode") || itemInfo.size === "N/A" ?
+                  "0 Bytes" : itemInfo.size
+              }
+            </span>
+          </h1>
         ) : null
       }
       <h1 className='text-gray-400'>
-        Created: <span className='text-gray-300'>{moment(itemInfo.birthDate).format("Do MMMM YYYY HH:MM")}</span>
+        Created: <span className='text-gray-300'>{moment(itemInfo.birthDate).format("Do MMMM YYYY HH:mm")}</span>
       </h1>
       <h1 className='text-gray-400'>
-        Modified: <span className='text-gray-300'>{moment(itemInfo.dateModified).format("Do MMMM YYYY HH:MM")}</span>
+        Modified: <span className='text-gray-300'>{moment(itemInfo.dateModified).format("Do MMMM YYYY HH:mm")}</span>
       </h1>
       {!itemInfo.isDirectory ? (
         <div className='flex flex-col gap-2 w-5/6'>
           <button
             className='bg-red-600 px-6 font-bold rounded-xl'
             title='Double click to delete.'
+            onDoubleClick={() => {
+              deleteItem(itemInfo.path)
+            }}
           >Delete file</button>
 
           {!downloadProgress ?
             <button
               className='bg-emerald-600 px-6 font-bold rounded-xl'
               title='Double click to upload.'
-              onDoubleClick={() => {
+              onClick={() => {
                 downloadFile(itemInfo.path)
               }}
             >Download</button>
@@ -125,10 +135,18 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
 
       ) :
         <div className="flex flex-col gap-2 w-5/6">
-          <button
-            className='bg-red-600 px-6 font-bold rounded-xl'
-            title='Double click to delete.'
-          >Delete directory</button>
+          {
+            itemInfo.path !== "./" ?
+              <button
+                className='bg-red-600 px-6 font-bold rounded-xl'
+                title='Double click to delete.'
+                onDoubleClick={() => {
+                  deleteItem(itemInfo.path)
+                }}
+              >Delete directory</button> :
+              null
+          }
+
           <button
             className='bg-purple-600 px-6 font-bold rounded-xl'
             title='Double click to upload.'
