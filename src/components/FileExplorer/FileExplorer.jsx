@@ -10,6 +10,7 @@ import { FaCss3 } from "react-icons/fa";
 import { IoLogoJavascript } from "react-icons/io";
 import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
+import Cookies from 'js-cookie';
 
 const FileExplorer = ({ directory, moveItem, setItemInfo, isEmpty, readDir, getParent, response }) => {
   const [draggedItem, setDraggedItem] = useState({});
@@ -72,9 +73,9 @@ const FileExplorer = ({ directory, moveItem, setItemInfo, isEmpty, readDir, getP
               <div
                 className='bg-gray-600 flex flex-row items-center cursor-pointer p-1 pl-2 shadow-2xl select-none'
                 draggable
-                onDragStart={(event) => { 
+                onDragStart={(event) => {
                   setDraggedItem(element);
-                 }}
+                }}
                 onDragOver={(event) => {
                   event.preventDefault()
                 }}
@@ -86,14 +87,14 @@ const FileExplorer = ({ directory, moveItem, setItemInfo, isEmpty, readDir, getP
                 }}
                 key={key}
                 onClick={() => {
+                    setItemInfo(element)
+                }}
+                onDoubleClick={() => {
                   if (element.isDirectory) {
                     readDir(false, element.path)
                   } else {
-                    setItemInfo(element)
+                    window.open(`/editor/${encodeURIComponent(element.path)}`, '_blank', 'rel=noopener noreferrer')
                   }
-                }}
-                onDoubleClick={() => {
-                  window.open(`/editor/${encodeURIComponent(element.path)}`,'_blank', 'rel=noopener noreferrer')
                 }}
               >
                 {
@@ -116,10 +117,24 @@ const FileExplorer = ({ directory, moveItem, setItemInfo, isEmpty, readDir, getP
                                 <IoLogoJavascript size={22} className='mx-2' /> :
                                 <FaFileAlt size={22} className='mx-2' />
                 }
-                {/* <h1 className='text-lg text-wrap w-1/3'>{e.name.length > 18 ? `${e.name.slice(0, 18)}...` : e.name}</h1> */}
+                {/* <h1 className='text-lg text-wrap w-1/3'>{element.name.length > 18 ? `${element.name.slice(0, 19)} (...)` : element.name}</h1> */}
                 <h1 className='text-lg text-left text-wrap break-words w-1/3'>{element.name}</h1>
-                <h1 className='text-sm text-left pl-10 mx-auto text-gray-400 w-1/3'>{moment(element.dateModified).format("Do MMMM YYYY HH:MM")}</h1>
-                <h1 className='text-base text-right text-gray-300 ml-auto mr-2 w-1/3'>{element.size}</h1>
+                <h1 className='text-sm text-left pl-10 mx-auto text-gray-400 w-1/3'>{moment(element.dateModified).format("Do MMMM YYYY HH:mm")}</h1>
+                {
+                  element.isDirectory && Cookies.get("mode") === "Quality mode" ?
+                    <h1 className='text-base text-right text-gray-300 ml-auto mr-2 w-1/3'>
+                      {element.size === "N/A" && Cookies.get("mode") === "Quality mode" ? "0 Bytes" : element.size}
+                    </h1> : !element.isDirectory ?
+                      <h1 className='text-base text-right text-gray-300 ml-auto mr-2 w-1/3'>
+                        {
+                        (element.size === "N/A" && Cookies.get("mode") === "Quality mode") || element.size === "N/A" ?
+                         "0 Bytes" : element.size
+                        }
+                      </h1> : <h1 className='text-base text-right text-gray-300 ml-auto mr-2 w-1/3'>
+                        
+                      </h1>
+                }
+
               </div>
             )) : isEmpty ? (
               <div className='flex flex-row items-center cursor-default p-1 pl-2 shadow-2xl select-none'>
