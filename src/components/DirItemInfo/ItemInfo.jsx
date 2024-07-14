@@ -82,7 +82,7 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
         Path: <span className="text-amber-200">{itemInfo.path}</span>
       </h1>
       {
-        itemInfo.size ? (
+        (itemInfo.size && Cookies.get("mode") !== "Optimized mode") || (itemInfo.size && !itemInfo.isDirectory) ? (
           <h1 className='text-gray-400'>Size:
             <span className='text-amber-200'>
               {
