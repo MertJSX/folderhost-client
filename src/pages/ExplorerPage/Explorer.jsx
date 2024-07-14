@@ -47,6 +47,20 @@ const ExplorerPage = () => {
     }
   }, [])
 
+
+  function handleError(err) {
+    if (err.response.data.err) {
+        console.error(err.response.data.err);
+        setError(err.response.data.err)
+        setTimeout(() => {
+          setError("")
+        }, 5000);
+    } else {
+      console.log(err);
+    }
+  }
+
+
   function moveItem(oldPath, newPath) {
     console.log("Old and newPath");
     console.log(oldPath);
@@ -55,6 +69,8 @@ const ExplorerPage = () => {
       .then((data) => {
         console.log(data);
         readDir();
+      }).catch((err) => {
+        handleError(err)
       })
   }
 
@@ -65,10 +81,17 @@ const ExplorerPage = () => {
       .then((data) => {
         console.log(data);
         if (item.isDirectory) {
-          readDir(false, newPath);
+          if (item.path === `${path}/`) {
+            readDir(false, newPath)
+            
+          } else {
+            readDir()
+          }
         } else {
           readDir()
         }
+      }).catch((err) => {
+        handleError(err)
       })
   }
 
@@ -94,6 +117,8 @@ const ExplorerPage = () => {
         setDownloadProgress(0);
       }, 5000);
       fileDownload(data.data, itemInfo.name)
+    }).catch((err) => {
+      handleError(err)
     })
   }
 
@@ -109,13 +134,7 @@ const ExplorerPage = () => {
       
       readDir()
     }).catch((err) => {
-      console.error(err.response.data.err);
-      if (err.response.data.err) {
-        setError(err.response.data.err)
-        setTimeout(() => {
-          setError("")
-        }, 5000);
-      }
+      handleError(err)
     })
   }
 
@@ -130,6 +149,8 @@ const ExplorerPage = () => {
         setIsEmpty(data.data.isEmpty)
         setDir(data.data.data)
         setItemInfo(data.data.directoryInfo)
+      }).catch((err) => {
+        handleError(err)
       })
       return;
     } else if (pathInput === undefined && !asParentPath) {
@@ -147,6 +168,8 @@ const ExplorerPage = () => {
         setIsEmpty(data.data.isEmpty);
         setDir(data.data.data)
         setItemInfo(data.data.directoryInfo)
+      }).catch((err) => {
+        handleError(err)
       })
       return;
     } else if (pathInput) {
@@ -158,6 +181,8 @@ const ExplorerPage = () => {
         setIsEmpty(data.data.isEmpty);
         setDir(data.data.data)
         setItemInfo(data.data.directoryInfo)
+      }).catch((err) => {
+        handleError(err)
       })
     }
 
@@ -178,6 +203,7 @@ const ExplorerPage = () => {
         <FileExplorer
           directory={directory}
           setDir={setDir}
+          itemInfo={itemInfo}
           setItemInfo={setItemInfo}
           isEmpty={isEmpty}
           readDir={readDir}
