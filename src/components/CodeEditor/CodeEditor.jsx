@@ -1,12 +1,13 @@
 import Editor from '@monaco-editor/react';
 
 
-const CodeEditor = ({editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile}) => {
+const CodeEditor = ({editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile, title}) => {
 
   return (
     <div>
       <div className="flex flex-col items-center justify-center">
         <div className="flex gap-1 p-2">
+        <h1 className='text-lg italic px-5 text-gray-400'>Editing: <span className='text-emerald-300'>{title}</span></h1>
           <h1 className='text-lg italic'>Mode:</h1>
           <select 
           className='bg-slate-600 font-bold text-lg px-5' 

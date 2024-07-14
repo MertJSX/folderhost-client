@@ -12,6 +12,7 @@ const CodeEditorPage = () => {
     const [fileContent, setFileContent] = useState("")
     const [path, setPath] = useState(params.path);
     const [res, setRes] = useState("")
+    const [fileTitle, setFileTitle] = useState("")
     function handleEditorChange(value, event) {
         setFileContent(value)
     }
@@ -75,7 +76,8 @@ const CodeEditorPage = () => {
                 console.log(data.data);
                 if (data.data.res) {
                     setFileContent(data.data.data);
-                    setEditorLanguage(detectFileLanguage())
+                    setEditorLanguage(detectFileLanguage());
+                    setFileTitle(data.data.title);
                 }
             })
         } else {
@@ -92,6 +94,7 @@ const CodeEditorPage = () => {
                 fileContent={fileContent}
                 response={res}
                 saveFile={saveFile}
+                title={fileTitle}
             />
         </div>
     )
