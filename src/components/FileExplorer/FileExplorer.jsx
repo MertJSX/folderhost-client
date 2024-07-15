@@ -12,7 +12,7 @@ import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
 import Cookies from 'js-cookie';
 
-const FileExplorer = ({ directory, moveItem,itemInfo, setItemInfo, isEmpty, readDir, getParent, response }) => {
+const FileExplorer = ({ directory, directoryInfo, moveItem,itemInfo, setItemInfo, isEmpty, readDir, getParent, response }) => {
   const [draggedItem, setDraggedItem] = useState({});
   const [dropTarget, setDropTarget] = useState("");
   const childElements = useRef([]);
@@ -30,14 +30,14 @@ const FileExplorer = ({ directory, moveItem,itemInfo, setItemInfo, isEmpty, read
   useEffect(() => {
     if (itemInfo.id || itemInfo.id === 0) {
       if (selectedChildEl !== null) {
-        childElements.current[selectedChildEl].classList.remove("border-sky-400")
+        childElements.current[selectedChildEl].classList.remove("border-sky-300")
       }
       setSelectedChildEl(itemInfo.id);
     } else {
       console.log(childElements.current[0]);
       if (selectedChildEl !== null) {
-        if (childElements.current[selectedChildEl].classList.contains("border-sky-400")) {
-          childElements.current[selectedChildEl].classList.remove("border-sky-400")
+        if (childElements.current[selectedChildEl].classList.contains("border-sky-300")) {
+          childElements.current[selectedChildEl].classList.remove("border-sky-300")
         }
       }
       setSelectedChildEl(null)
@@ -46,7 +46,7 @@ const FileExplorer = ({ directory, moveItem,itemInfo, setItemInfo, isEmpty, read
 
   useEffect(() => {
     if (selectedChildEl !== null) {
-      childElements.current[selectedChildEl].classList.add("border-sky-400")
+      childElements.current[selectedChildEl].classList.add("border-sky-300")
     }
   }, [selectedChildEl])
 
@@ -63,12 +63,13 @@ const FileExplorer = ({ directory, moveItem,itemInfo, setItemInfo, isEmpty, read
   }
 
   return (
-    <div className='flex flex-col bg-gray-700 mt-4 gap-3 w-2/3 mx-auto p-4 min-w-[400px] max-w-[60%] min-h-[45vh] max-h-[60vh] shadow-2xl'>
+    <div className='flex flex-col bg-gray-700 mt-4 gap-3 w-2/3 mx-auto p-4 min-w-[400px] max-w-[60%] min-h-[45vh] max-h-[65vh] shadow-2xl'>
+      <div className='flex gap-2'>
       {
         directory ?
           (
-            <div
-              className='bg-gray-600 flex flex-row items-center cursor-pointer p-1 pl-2 shadow-2xl select-none'
+            <button
+              className='bg-gray-600 w-auto flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90 rounded-full'
               ref={previousDirRef}
               onDragOver={(event) => {
                 event.preventDefault()
@@ -106,14 +107,12 @@ const FileExplorer = ({ directory, moveItem,itemInfo, setItemInfo, isEmpty, read
                 readDir(true)
               }}
             >
-              <FaFolder size={22} className='mx-2' />
               <IoMdArrowBack size={22} className='mx-2' />
               {/* <h1 className='text-lg'>{"<--"}</h1> */}
-              <h1 className='text-base text-gray-300 ml-auto mr-2'>N/A</h1>
-            </div>
+            </button>
           ) : isEmpty ?
             (
-              <div className='bg-gray-600 flex flex-row items-center cursor-pointer p-1 pl-2 shadow-2xl select-none'
+              <button className='bg-gray-600 w-1/4 flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90'
                 onClick={() => {
                   readDir(true)
                 }}
@@ -121,17 +120,31 @@ const FileExplorer = ({ directory, moveItem,itemInfo, setItemInfo, isEmpty, read
                 <FaFolder size={22} className='mx-2' />
                 <IoMdArrowBack size={22} className='mx-2' />
                 {/* <h1 className='text-lg'>{"<--"}</h1> */}
-                <h1 className='text-base text-gray-300 ml-auto mr-2'>N/A</h1>
-              </div>
+              </button>
             ) : null
       }
+      {
+        directoryInfo ? 
+        <div className='bg-gray-600 w-auto flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90'
+                onClick={() => {
+                  setItemInfo(directoryInfo)
+                }}
+              >
+                <FaFolderOpen size={22} className='mx-2' />
+                <h1 className='text-base text-gray-300 mr-2'>{directoryInfo.name}</h1>
+                {/* <h1 className='text-lg'>{"<--"}</h1> */}
+        </div> : null
+
+      }
+      </div>
+      <hr className='h-px my-1 bg-sky-400 border-0' />
       <div className='flex flex-col gap-2 overflow-hidden overflow-y-scroll'>
         {
           directory[0] !== undefined ?
             directory.map((element) => (
               <div
                 ref={addToChildElements}
-                className='bg-gray-600 flex flex-row items-center cursor-pointer p-1 pl-2 shadow-2xl select-none border-2 border-gray-600'
+                className='bg-gray-600 file-explorer-item flex flex-row items-center cursor-pointer p-1 pl-2 shadow-2xl select-none border-2 border-gray-600 hover:border-l-cyan-500'
                 draggable
                 onDragStart={() => {
                   setDraggedItem(element);
