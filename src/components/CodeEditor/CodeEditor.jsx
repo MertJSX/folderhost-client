@@ -1,21 +1,30 @@
 import Editor from '@monaco-editor/react';
+import { useState } from 'react';
 
 
-const CodeEditor = ({editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile, title}) => {
+const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile, title }) => {
+
+  const [editorFontSize, setEditorFontSize] = useState(18);
 
   return (
     <div>
       <div className="flex flex-col items-center justify-center">
         <div className="flex gap-1 p-2">
-        <h1 className='text-lg italic px-5 text-gray-400'>Editing: <span className='text-emerald-300'>{title}</span></h1>
+          <h1 className='text-lg italic px-5 text-gray-400'>Editing: <span className='text-emerald-300'>{title}</span></h1>
+          <h1 className='text-lg italic'>Font size:</h1>
+          <input 
+          className='bg-gray-600 text-center text-lg px-0 w-1/12'
+          type="number" 
+          value={editorFontSize} 
+          onChange={(e) => {setEditorFontSize(e.target.value)}} />
           <h1 className='text-lg italic'>Mode:</h1>
-          <select 
-          className='bg-slate-600 font-bold text-lg px-5' 
-          value={editorLanguage}
-          onChange={(e) => {
-            console.log(e.target.value);
-            setEditorLanguage(e.target.value)
-          }}
+          <select
+            className='bg-slate-600 font-bold text-lg px-5'
+            value={editorLanguage}
+            onChange={(e) => {
+              console.log(e.target.value);
+              setEditorLanguage(e.target.value)
+            }}
           >
             <option value="javascript">Javascript</option>
             <option value="typescript">Typescript</option>
@@ -37,11 +46,11 @@ const CodeEditor = ({editorLanguage, handleEditorChange, setEditorLanguage, file
             <option value="mysql">MYSQL</option>
             <option value="plaintext">Plain text</option>
           </select>
-          <button 
-          className='px-6 border-2 bg-emerald-700 border-emerald-500 rounded-lg'
-          onClick={() => {
-            saveFile()
-          }}
+          <button
+            className='px-6 border-2 bg-emerald-700 border-emerald-500 rounded-lg'
+            onClick={() => {
+              saveFile()
+            }}
           >
             Save file
           </button>
@@ -52,6 +61,20 @@ const CodeEditor = ({editorLanguage, handleEditorChange, setEditorLanguage, file
           width="90vw"
           height="90vh"
           theme="vs-dark"
+          options={
+            { 
+              fontSize: editorFontSize,
+              tabCompletion: "on",
+              smoothScrolling: true,
+              cursorSmoothCaretAnimation: "on",
+              unicodeHighlight: {
+                ambiguousCharacters: true,
+                includeComments: true,
+                includeStrings: true,
+                invincibleCharacters: true
+              }
+            }
+          }
           language={editorLanguage}
           value={fileContent}
           onChange={handleEditorChange}
