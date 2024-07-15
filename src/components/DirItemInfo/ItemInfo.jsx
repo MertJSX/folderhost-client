@@ -12,31 +12,33 @@ import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
 import Cookies from 'js-cookie';
 
-const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem }) => {
+const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, path }) => {
   const renameInput = useRef(null)
   const logoSize = 75;
-  //const logoSize = "35vh"
+
   return (
     <div className='flex flex-col bg-gray-700 items-center mt-4 gap-3 w-1/3 mx-auto p-4 max-w-[30%] h-auto rounded-xl shadow-2xl'>
       {
-        itemInfo.isDirectory ?
-          <FaFolderOpen size={logoSize} className='mx-2' />
-          : itemInfo.name.split(".").pop() === "png" ||
-            itemInfo.name.split(".").pop() === "jpg" ||
-            itemInfo.name.split(".").pop() === "jpeg" ?
-            <FaFileImage size={logoSize} className='mx-2' />
-            : itemInfo.name.split(".").pop() === "pdf" ?
-              <FaFilePdf size={logoSize} className='mx-2' />
-              : itemInfo.name.split(".").pop() === "rar" ||
-                itemInfo.name.split(".").pop() === "zip" ?
-                <FaFileArchive size={logoSize} className='mx-2' />
-                : itemInfo.name.split(".").pop() === "html" ?
-                  <FaHtml5 size={logoSize} className='mx-2' />
-                  : itemInfo.name.split(".").pop() === "css" ?
-                    <FaCss3 size={logoSize} className='mx-2' />
-                    : itemInfo.name.split(".").pop() === "js" ?
-                      <IoLogoJavascript size={logoSize} className='mx-2' /> :
-                      <FaFileAlt size={logoSize} className='mx-2' />
+        itemInfo.isDirectory && itemInfo.path !== (path.slice(-1) === "/" ? path : path + "/") ?
+          <FaFolder size={logoSize} className='mx-2' />
+          : itemInfo.isDirectory && itemInfo.path === (path.slice(-1) === "/" ? path : path + "/") ?
+            <FaFolderOpen size={logoSize} className='mx-2' />
+            : itemInfo.name.split(".").pop() === "png" ||
+              itemInfo.name.split(".").pop() === "jpg" ||
+              itemInfo.name.split(".").pop() === "jpeg" ?
+              <FaFileImage size={logoSize} className='mx-2' />
+              : itemInfo.name.split(".").pop() === "pdf" ?
+                <FaFilePdf size={logoSize} className='mx-2' />
+                : itemInfo.name.split(".").pop() === "rar" ||
+                  itemInfo.name.split(".").pop() === "zip" ?
+                  <FaFileArchive size={logoSize} className='mx-2' />
+                  : itemInfo.name.split(".").pop() === "html" ?
+                    <FaHtml5 size={logoSize} className='mx-2' />
+                    : itemInfo.name.split(".").pop() === "css" ?
+                      <FaCss3 size={logoSize} className='mx-2' />
+                      : itemInfo.name.split(".").pop() === "js" ?
+                        <IoLogoJavascript size={logoSize} className='mx-2' /> :
+                        <FaFileAlt size={logoSize} className='mx-2' />
       }
       {
         itemInfo.path === "./" ?
@@ -105,7 +107,7 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
             className='bg-red-600 px-6 font-bold rounded-xl'
             title='Double click to delete.'
             onDoubleClick={() => {
-              deleteItem(itemInfo.path)
+              deleteItem(itemInfo)
             }}
           >Delete file</button>
 
@@ -138,35 +140,41 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
           {
             itemInfo.path !== "./" ?
               <button
-                className='bg-red-600 px-6 font-bold rounded-xl'
+                className='bg-red-600 hover:bg-red-700 px-6 font-bold rounded-xl'
                 title='Double click to delete.'
                 onDoubleClick={() => {
-                  deleteItem(itemInfo.path)
+                  deleteItem(itemInfo)
                 }}
               >Delete directory</button> :
               null
           }
 
-          <button
-            className='bg-purple-600 px-6 font-bold rounded-xl'
-            title='Double click to upload.'
-          >Upload new file</button>
-          <div className="flex flex-row">
-            <input
-              type="text"
-              placeholder='folder name'
-              className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
-            />
-            <button className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'>Create</button>
-          </div>
-          <div className="flex flex-row">
-            <input
-              type="text"
-              placeholder='file name'
-              className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
-            />
-            <button className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'>Create</button>
-          </div>
+          {
+            itemInfo.path === (path.slice(-1) === "/" ? path : path + "/") ?
+              <div className='w-full flex flex-col gap-2'>
+                <button
+                  className='bg-purple-600 px-6 font-bold rounded-xl'
+                  title='Click to upload.'
+                >Upload new file</button>
+                <div className="flex flex-row">
+                  <input
+                    type="text"
+                    placeholder='folder name'
+                    className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
+                  />
+                  <button className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'>Create</button>
+                </div>
+                <div className="flex flex-row">
+                  <input
+                    type="text"
+                    placeholder='file name'
+                    className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
+                  />
+                  <button className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'>Create</button>
+                </div>
+              </div> : null
+          }
+
         </div>
       }
     </div>
