@@ -11,8 +11,9 @@ import { IoLogoJavascript } from "react-icons/io";
 import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
 import Cookies from 'js-cookie';
+import convertToBytes from '../../utils/convertToBytes';
 
-const FileExplorer = ({ directory, directoryInfo, moveItem,itemInfo, setItemInfo, isEmpty, readDir, getParent, response }) => {
+const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem,itemInfo, setItemInfo, isEmpty, readDir, getParent, response }) => {
   const [draggedItem, setDraggedItem] = useState({});
   const [dropTarget, setDropTarget] = useState("");
   const childElements = useRef([]);
@@ -51,8 +52,16 @@ const FileExplorer = ({ directory, directoryInfo, moveItem,itemInfo, setItemInfo
   }, [selectedChildEl])
 
   useEffect(() => {
+    if (selectedChildEl !== null) {
+      if (childElements.current[selectedChildEl].classList.contains("border-sky-300")) {
+        childElements.current[selectedChildEl].classList.remove("border-sky-300")
+      }
+    }
     childElements.current = []
     setSelectedChildEl(null);
+    directory.forEach((el) => {
+      console.log(el);
+    })
   }, [directory])
 
   function addToChildElements(e) {
@@ -137,7 +146,39 @@ const FileExplorer = ({ directory, directoryInfo, moveItem,itemInfo, setItemInfo
 
       }
       </div>
-      <hr className='h-px my-1 bg-sky-400 border-0' />
+      <hr className='h-px bg-sky-400 border-0' />
+      <div className='flex gap-2 mb-0'>
+        <h1 
+        className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
+        onClick={() => {
+          let sortedItems = [...directory].sort((a, b) => a.name.localeCompare(b.name))
+          .map((file, index) => ({
+            ...file, id: index
+          }))
+          setDirectory(sortedItems)
+        }}
+        >Name</h1>
+        <h1 
+        className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
+        onClick={() => {
+          let sortedItems = [...directory].sort((a, b) => new Date(b.dateModified) - new Date(a.dateModified))
+          .map((file, index) => ({
+            ...file, id: index
+          }))
+          setDirectory(sortedItems)
+        }}
+        >Date</h1>
+        <h1 
+        className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
+        onClick={() => {
+          let sortedItems = [...directory].sort((a, b) => convertToBytes(b.size) - convertToBytes(a.size))
+          .map((file, index) => ({
+            ...file, id: index
+          }))
+          setDirectory(sortedItems);
+        }}
+        >Size</h1>
+      </div>
       <div className='flex flex-col gap-2 overflow-hidden overflow-y-scroll'>
         {
           directory[0] !== undefined ?

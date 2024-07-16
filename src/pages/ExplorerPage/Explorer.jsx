@@ -226,6 +226,7 @@ const ExplorerPage = () => {
       <div className="flex flex-row w-full justify-center items-center flex-wrap">
         <FileExplorer
           directory={directory}
+          setDirectory={setDir}
           setDir={setDir}
           itemInfo={itemInfo}
           setItemInfo={setItemInfo}
