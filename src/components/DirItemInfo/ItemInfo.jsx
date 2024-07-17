@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import moment from 'moment'
 import { FaFolder } from "react-icons/fa";
 import { FaFileAlt } from "react-icons/fa";
@@ -8,12 +8,13 @@ import { FaFileArchive } from "react-icons/fa";
 import { FaHtml5 } from "react-icons/fa";
 import { FaCss3 } from "react-icons/fa";
 import { IoLogoJavascript } from "react-icons/io";
-import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
 import Cookies from 'js-cookie';
 
-const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, path }) => {
+const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, path, createItem }) => {
   const renameInput = useRef(null)
+  const [folderName, setFolderName] = useState("");
+  const [fileName, setFileName] = useState("");
   const logoSize = 75;
 
   return (
@@ -130,7 +131,7 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
           }
           <a
             href={`/editor/${encodeURIComponent(itemInfo.path)}`}
-            target="_blank"
+            target="_blank" rel="noreferrer"
             className='bg-sky-700 px-6 font-bold text-center rounded-xl'
           >Open Editor</a>
         </div>
@@ -152,25 +153,47 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
           {
             itemInfo.path === (path.slice(-1) === "/" ? path : path + "/") ?
               <div className='w-full flex flex-col gap-2'>
-                <button
-                  className='bg-purple-600 px-6 font-bold rounded-xl'
+                <a
+                  className='bg-purple-600 px-6 font-bold rounded-xl text-center'
                   title='Click to upload.'
-                >Upload new file</button>
+                  target='_blank' rel="noreferrer"
+                  href={`/upload/${encodeURIComponent(itemInfo.path)}`}
+                >Upload new file</a>
                 <div className="flex flex-row">
                   <input
                     type="text"
                     placeholder='folder name'
                     className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
+                    value={folderName}
+                    onChange={(e) => {
+                      setFolderName(e.target.value)
+                    }}
                   />
-                  <button className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'>Create</button>
+                  <button 
+                  className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
+                  onClick={() => {
+                    setFolderName("")
+                    createItem(itemInfo.path, "folder", folderName)
+                  }}
+                  >Create</button>
                 </div>
                 <div className="flex flex-row">
                   <input
                     type="text"
                     placeholder='file name'
                     className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
+                    value={fileName}
+                    onChange={(e) => {
+                      setFileName(e.target.value)
+                    }}
                   />
-                  <button className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'>Create</button>
+                  <button 
+                  className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
+                  onClick={() => {
+                    setFileName("");
+                    createItem(itemInfo.path, "file", fileName)
+                  }}
+                  >Create</button>
                 </div>
               </div> : null
           }
