@@ -156,6 +156,28 @@ const ExplorerPage = () => {
     })
   }
 
+  function createItem(itempath, itemType, itemName) {
+    axios.post(`${Cookies.get("ip")}/write-file?password=${Cookies.get("password")}&path=${itempath.slice(1)}&type=create`, {
+      itemType: itemType,
+      itemName: itemName
+    })
+    .then((data) => {
+      console.log(data);
+
+      readDir()
+
+      if (data.data.response) {
+        setRes(data.data.response)
+        setTimeout(() => {
+          setRes("")
+        }, 5000);
+      }
+
+    }).catch((err) => {
+      handleError(err)
+    })
+  }
+
   function readDir(asParentPath, pathInput) {
     if (asParentPath && path !== "./") {
       setPath(getParent(path));
@@ -248,6 +270,7 @@ const ExplorerPage = () => {
               downloadProgress={downloadProgress}
               deleteItem={deleteItem}
               path={path}
+              createItem={createItem}
             />
           ) : null
         }
