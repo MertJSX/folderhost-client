@@ -96,6 +96,12 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
           </h1>
         ) : null
       }
+      {
+        itemInfo.storage_limit && Cookies.get("mode") !== "Optimized mode" ?
+          <h1 className='text-gray-400'>
+            {"Limit: "}<span className='text-emerald-300'>{itemInfo.storage_limit}</span>
+          </h1> : null
+      }
       <h1 className='text-gray-400'>
         Created: <span className='text-gray-300'>{moment(itemInfo.birthDate).format("Do MMMM YYYY HH:mm")}</span>
       </h1>
@@ -169,12 +175,12 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
                       setFolderName(e.target.value)
                     }}
                   />
-                  <button 
-                  className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
-                  onClick={() => {
-                    setFolderName("")
-                    createItem(itemInfo.path, "folder", folderName)
-                  }}
+                  <button
+                    className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
+                    onClick={() => {
+                      setFolderName("")
+                      createItem(itemInfo.path, "folder", folderName)
+                    }}
                   >Create</button>
                 </div>
                 <div className="flex flex-row">
@@ -187,12 +193,12 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
                       setFileName(e.target.value)
                     }}
                   />
-                  <button 
-                  className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
-                  onClick={() => {
-                    setFileName("");
-                    createItem(itemInfo.path, "file", fileName)
-                  }}
+                  <button
+                    className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
+                    onClick={() => {
+                      setFileName("");
+                      createItem(itemInfo.path, "file", fileName)
+                    }}
                   >Create</button>
                 </div>
               </div> : null
