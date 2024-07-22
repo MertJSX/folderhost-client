@@ -18,7 +18,7 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
   const logoSize = 75;
 
   return (
-    <div className='flex flex-col bg-gray-700 items-center mt-4 gap-3 w-1/3 mx-auto p-4 max-w-[30%] h-auto rounded-xl shadow-2xl'>
+    <div className='flex flex-col bg-gray-700 items-center mt-4 gap-3 w-1/3 mx-auto p-4 min-w-[320px] max-w-[30%] h-auto rounded-xl shadow-2xl'>
       {
         itemInfo.isDirectory && itemInfo.path !== (path.slice(-1) === "/" ? path : path + "/") ?
           <FaFolder size={logoSize} className='mx-2' />

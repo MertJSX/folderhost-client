@@ -31,7 +31,7 @@ const UploadFile = () => {
     setRes("");
     setErr("");
     setUploadProgress(0);
-    axios.post(`${Cookies.get("ip")}/upload?password=${Cookies.get("password")}&path=${path.slice(1)}`, formData, {
+    axios.post(`${Cookies.get("ip")}/api/upload?password=${Cookies.get("password")}&path=${path.slice(1)}`, formData, {
       onUploadProgress: (progressEvent) => {
         if (progressEvent.progress === 1) {
           return;

@@ -11,7 +11,7 @@ const Login = () => {
     const navigate = useNavigate();
 
     function verifyPassword() {
-        axios.get(ip + `/verify-password?password=${password}`).then((data) => {
+        axios.get(ip + `/api/verify-password?password=${password}`).then((data) => {
             console.log(data);
             if (data.data.res) {
                 Cookies.set("ip", ip);

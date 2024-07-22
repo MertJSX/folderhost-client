@@ -18,7 +18,7 @@ const CodeEditorPage = () => {
     }
     function saveFile() {
         console.log(fileContent);
-        axios.post(`${Cookies.get("ip")}/write-file?password=${Cookies.get("password")}&path=${path.slice(1)}&type=change`, {
+        axios.post(`${Cookies.get("ip")}/api/write-file?password=${Cookies.get("password")}&path=${path.slice(1)}&type=change`, {
             content: fileContent
         }).then((data) => {
             setRes(data.data.response)
@@ -72,7 +72,7 @@ const CodeEditorPage = () => {
     }
     useEffect(() => {
         if (Cookies.get("ip") && Cookies.get("password")) {
-            axios.get(`${Cookies.get("ip")}/read-file?password=${Cookies.get("password")}&filepath=${path.slice(1)}`).then((data) => {
+            axios.get(`${Cookies.get("ip")}/api/read-file?password=${Cookies.get("password")}&filepath=${path.slice(1)}`).then((data) => {
                 console.log(data.data);
                 if (data.data.res) {
                     setFileContent(data.data.data);

@@ -50,7 +50,7 @@ const ExplorerPage = () => {
 
 
   function handleError(err) {
-    if (err.response.data.err) {
+    if (err.response) {
       console.error(err.response.data.err);
       setError(err.response.data.err)
       setTimeout(() => {
@@ -58,6 +58,7 @@ const ExplorerPage = () => {
       }, 5000);
     } else {
       console.log(err);
+      setError("Cannot connect to the server!")
     }
   }
 
@@ -66,7 +67,7 @@ const ExplorerPage = () => {
     console.log("Old and newPath");
     console.log(oldPath);
     console.log(newPath);
-    axios.get(`${Cookies.get("ip")}/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath.slice(1)}&newFilepath=${newPath.slice(1)}&type=move`)
+    axios.get(`${Cookies.get("ip")}/api/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath.slice(1)}&newFilepath=${newPath.slice(1)}&type=move`)
       .then((data) => {
         console.log(data);
         readDir();
@@ -83,7 +84,7 @@ const ExplorerPage = () => {
     } else {
       newPath = newPath + "/" + newName
     }
-    axios.get(`${Cookies.get("ip")}/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath}&newFilepath=${newPath.slice(1)}&type=rename`)
+    axios.get(`${Cookies.get("ip")}/api/rename-file?password=${Cookies.get("password")}&oldFilepath=${oldPath}&newFilepath=${newPath.slice(1)}&type=rename`)
       .then((data) => {
         console.log(data);
         if (item.isDirectory) {
@@ -102,7 +103,7 @@ const ExplorerPage = () => {
   }
 
   function downloadFile(filepath) {
-    axios.get(`${Cookies.get("ip")}/download?password=${Cookies.get("password")}&filepath=${filepath.slice(1)}`, {
+    axios.get(`${Cookies.get("ip")}/api/download?password=${Cookies.get("password")}&filepath=${filepath.slice(1)}`, {
       responseType: "blob",
       onDownloadProgress: (
         progressEvent) => {
@@ -130,7 +131,7 @@ const ExplorerPage = () => {
 
   function deleteItem(item) {
     let newPath = `${getParent(item.path.slice(0, -1))}`;
-    axios.get(`${Cookies.get("ip")}/delete?password=${Cookies.get("password")}&path=${item.path.slice(1)}`).then((data) => {
+    axios.get(`${Cookies.get("ip")}/api/delete?password=${Cookies.get("password")}&path=${item.path.slice(1)}`).then((data) => {
       console.log(data);
 
       if (item.isDirectory) {
@@ -157,7 +158,7 @@ const ExplorerPage = () => {
   }
 
   function createItem(itempath, itemType, itemName) {
-    axios.post(`${Cookies.get("ip")}/write-file?password=${Cookies.get("password")}&path=${itempath.slice(1)}&type=create`, {
+    axios.post(`${Cookies.get("ip")}/api/write-file?password=${Cookies.get("password")}&path=${itempath.slice(1)}&type=create`, {
       itemType: itemType,
       itemName: itemName
     })
@@ -184,7 +185,7 @@ const ExplorerPage = () => {
       setIsEmpty(false)
       setDir([]);
       setRes("");
-      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${getParent(path).slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`)
+      axios.get(Cookies.get("ip") + `/api/read-dir?password=${Cookies.get("password")}&folder=${getParent(path).slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`)
         .then((data) => {
           console.log(data);
           setIsEmpty(data.data.isEmpty)
@@ -202,7 +203,7 @@ const ExplorerPage = () => {
       // }
       setIsEmpty(false)
       setRes("");
-      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${path.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`).then((data) => {
+      axios.get(Cookies.get("ip") + `/api/read-dir?password=${Cookies.get("password")}&folder=${path.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`).then((data) => {
         console.log(data);
         if (!data.data.data) {
           setRes(data.data.err)
@@ -220,7 +221,7 @@ const ExplorerPage = () => {
       setDir([]);
       setIsEmpty(false)
       setRes("");
-      axios.get(Cookies.get("ip") + `/read-dir?password=${Cookies.get("password")}&folder=${pathInput.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`).then((data) => {
+      axios.get(Cookies.get("ip") + `/api/read-dir?password=${Cookies.get("password")}&folder=${pathInput.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`).then((data) => {
         console.log(data);
         setPath(pathInput)
         setIsEmpty(data.data.isEmpty);
