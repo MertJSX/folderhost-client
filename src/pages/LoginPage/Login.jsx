@@ -25,6 +25,17 @@ const Login = () => {
                     setErr("")
                 }, 2000);
             }
+        }).catch((err) => {
+            if (err.response) {
+                console.error(err.response.data.err);
+                setErr(err.response.data.err)
+                setTimeout(() => {
+                  setErr("")
+                }, 5000);
+              } else {
+                console.log(err);
+                setErr("Cannot connect to the server!")
+              }
         })
     }
 
