@@ -1,17 +1,18 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import moment from 'moment'
 import { FaFolder } from "react-icons/fa";
 import { FaFileAlt } from "react-icons/fa";
 import { FaFileImage } from "react-icons/fa";
 import { FaFilePdf } from "react-icons/fa6";
 import { FaFileArchive } from "react-icons/fa";
+import { FaCopy } from "react-icons/fa";
 import { FaHtml5 } from "react-icons/fa";
 import { FaCss3 } from "react-icons/fa";
 import { IoLogoJavascript } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
 import Cookies from 'js-cookie';
 
-const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, path, createItem }) => {
+const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, path, createItem, socket, unzipProgress }) => {
   const renameInput = useRef(null)
   const [folderName, setFolderName] = useState("");
   const [fileName, setFileName] = useState("");
@@ -117,7 +118,36 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
               deleteItem(itemInfo)
             }}
           >Delete file</button>
+          <button
+            className='bg-sky-600 px-6 font-bold rounded-xl'
+            title='Double click to copy.'
+            onDoubleClick={() => {
+              console.log("Nothing happened...");
+            }}
+          >Create copy</button>
 
+          {itemInfo.name.split(".").pop() === "zip" && unzipProgress === 0 ?
+            <button
+              className='bg-yellow-600 px-6 font-bold rounded-xl'
+              title='Double click to unzip.'
+              onDoubleClick={() => {
+                console.log("Unzip");
+                if (socket !== null) {
+                  socket.current.emit("unzip", {
+                    path: itemInfo.path.slice(1),
+                    password: Cookies.get("password")
+                  })
+                }
+              }}
+            >Unzip</button>
+            : itemInfo.name.split(".").pop() === "zip" && unzipProgress > 0 ?
+            <div>
+              <h1 className="text-center">{unzipProgress === 100 ? "Unzipped" : `Unzipping... ${unzipProgress}%`}</h1>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div className="bg-yellow-600 h-2.5 rounded-full" style={{ width: `${unzipProgress}%` }} />
+              </div>
+            </div> : null
+          }
           {!downloadProgress ?
             <button
               className='bg-emerald-600 px-6 font-bold rounded-xl'
@@ -153,6 +183,17 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
                   deleteItem(itemInfo)
                 }}
               >Delete directory</button> :
+              null
+          }
+          {
+            itemInfo.path !== "./" ?
+              <button
+                className='bg-amber-600 hover:bg-amber-700 px-6 font-bold rounded-xl'
+                title='Double click to zip.'
+                onDoubleClick={() => {
+                  deleteItem(itemInfo)
+                }}
+              >Zip</button> :
               null
           }
 

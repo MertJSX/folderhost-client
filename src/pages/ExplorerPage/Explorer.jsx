@@ -3,11 +3,12 @@ import Header from '../../components/Header/Header';
 import FileExplorer from '../../components/FileExplorer/FileExplorer';
 import Options from '../../components/Options/Options';
 import ItemInfo from '../../components/DirItemInfo/ItemInfo';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
 import axios from "axios";
 import fileDownload from 'js-file-download';
 import { useParams, useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
 
 const ExplorerPage = () => {
   const params = useParams();
@@ -20,6 +21,9 @@ const ExplorerPage = () => {
   const [response, setRes] = useState("");
   const [error, setError] = useState("");
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [unzipProgress, setUnzipProgress] = useState(0)
+  const [connected, setConnected] = useState(false);
+  const socket = useRef();
 
   function getParent(filePath) {
     console.log(filePath);
@@ -43,6 +47,50 @@ const ExplorerPage = () => {
     console.log(getParent(path));
     if (Cookies.get("ip") && Cookies.get("password")) {
       readDir()
+      if (!connected) {
+        socket.current = io(Cookies.get("ip"), { auth: { password: Cookies.get("password") } });
+        setConnected(true)
+        socket.current.on('connect_error', (err) => {
+          console.log("Socket connect error");
+          setTimeout(() => {
+            setError(`Socket: ${err.message}`)
+            setTimeout(() => {
+              setError("")
+            }, 5000);
+          }, 3000);
+        });
+
+        socket.current.on('connect', () => {
+          console.log('Connected to the server');
+
+          socket.current.on('unzip-progress', (res) => {
+            setUnzipProgress(res.progress);
+            console.log(res);
+          });
+
+          socket.current.on('unzip-completed', (res) => {
+            console.log(res);
+            setUnzipProgress(100)
+            setTimeout(() => {
+              setUnzipProgress(0)
+              readDir()
+            }, 3000);
+          });
+
+          socket.current.on('error', (res) => {
+            console.log(res);
+            setError(res.err)
+            setTimeout(() => {
+              setError("")
+            }, 5000);
+          });
+
+          socket.current.on('disconnect', (reason) => {
+            console.log(`Disconnected from the server: ${reason}`);
+            socket.current = null;
+          });
+        });
+      }
     } else {
       navigate("/login")
     }
@@ -52,7 +100,8 @@ const ExplorerPage = () => {
   function handleError(err) {
     if (err.response) {
       console.error(err.response.data.err);
-      setError(err.response.data.err)
+      setError(`Client: ${err.response.data.err}`);
+      
       setTimeout(() => {
         setError("")
       }, 5000);
@@ -162,21 +211,21 @@ const ExplorerPage = () => {
       itemType: itemType,
       itemName: itemName
     })
-    .then((data) => {
-      console.log(data);
+      .then((data) => {
+        console.log(data);
 
-      readDir()
+        readDir()
 
-      if (data.data.response) {
-        setRes(data.data.response)
-        setTimeout(() => {
-          setRes("")
-        }, 5000);
-      }
+        if (data.data.response) {
+          setRes(data.data.response)
+          setTimeout(() => {
+            setRes("")
+          }, 5000);
+        }
 
-    }).catch((err) => {
-      handleError(err)
-    })
+      }).catch((err) => {
+        handleError(err)
+      })
   }
 
   function readDir(asParentPath, pathInput) {
@@ -272,6 +321,8 @@ const ExplorerPage = () => {
               deleteItem={deleteItem}
               path={path}
               createItem={createItem}
+              unzipProgress={unzipProgress}
+              socket={socket}
             />
           ) : null
         }
