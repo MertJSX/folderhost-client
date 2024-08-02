@@ -1,10 +1,96 @@
 import Editor from '@monaco-editor/react';
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { htmlSnippets } from './snippets/htmlSnippets';
+import { jsSnippets } from './snippets/jsSnippets';
+import theme from './themes/theme.json'
 
-
-const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile, title }) => {
-
+const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile, title, readOnly }) => {
   const [editorFontSize, setEditorFontSize] = useState(18);
+  const editorRef = useRef(null);
+
+
+  const handleEditorDidMount = (editor, monaco) => {
+
+    editorRef.current = editor;
+
+    monaco.editor.defineTheme('vs-dark', theme);
+    monaco.languages.registerCompletionItemProvider('html', {
+      provideCompletionItems: (model, position) => {
+        let suggestions = htmlSnippets(monaco);
+        const textBeforePosition = model.getValueInRange({
+          startLineNumber: 1,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+
+        const scriptOpen = /<script[^>]*>/gi;
+        const scriptClose = /<\/script>/gi;
+
+        let match;
+        let lastOpenIndex = -1;
+        let lastCloseIndex = -1;
+
+        while ((match = scriptOpen.exec(textBeforePosition))) {
+          lastOpenIndex = match.index;
+        }
+
+        while ((match = scriptClose.exec(textBeforePosition))) {
+          lastCloseIndex = match.index;
+        }
+
+        const inScriptTag = lastOpenIndex > lastCloseIndex;
+
+        if (inScriptTag) {
+          return { suggestions: jsSnippets(monaco) };
+        }
+
+        return { suggestions: suggestions };
+      }
+    });
+    monaco.languages.registerCompletionItemProvider('javascript', {
+      provideCompletionItems: () => {
+        let suggestions = jsSnippets(monaco)
+        return { suggestions: suggestions };
+      }
+    });
+    console.log("Editor log", editor);
+
+    editor.onDidChangeModelContent((event) => {
+      if (readOnly) {
+        editor.setValue(event.changes[0].text)
+        editor.updateOptions({ readOnly: readOnly })
+      }
+    })
+
+    editor.addAction({
+      id: 'save-file',
+      label: 'Save File',
+      keybindings: [
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS // Ctrl+S or Cmd+S on macOS
+      ],
+      run: () => {
+        // Handle Ctrl+S action
+        console.log("Already saved!");
+
+      }
+    });
+  };
+
+  useEffect(() => {
+    console.log("readonly changed", readOnly);
+    console.log(editorRef);
+
+
+    if (editorRef.current) {
+      console.log("Must be updated");
+      console.log(readOnly);
+
+      editorRef.current.updateOptions({ readOnly: readOnly })
+    }
+
+  }, [readOnly, fileContent])
+
 
   return (
     <div>
@@ -12,18 +98,17 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
         <div className="flex gap-1 p-2">
           <h1 className='text-lg italic px-5 text-gray-400'>Editing: <span className='text-emerald-300'>{title}</span></h1>
           <h1 className='text-lg italic'>Font size:</h1>
-          <input 
-          className='bg-gray-600 text-center text-lg px-0 w-1/12'
-          type="number" 
-          value={editorFontSize} 
-          onChange={(e) => {setEditorFontSize(e.target.value)}} />
+          <input
+            className='bg-gray-600 text-center text-lg px-0 w-1/12'
+            type="number"
+            value={editorFontSize}
+            onChange={(e) => { setEditorFontSize(parseInt(e.target.value, 10)) }} />
           <h1 className='text-lg italic'>Mode:</h1>
           <select
             className='bg-slate-600 font-bold text-lg px-5'
             value={editorLanguage}
             onChange={(e) => {
-              console.log(e.target.value);
-              setEditorLanguage(e.target.value)
+              setEditorLanguage(e.target.value);
             }}
           >
             <option value="javascript">Javascript</option>
@@ -49,7 +134,7 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
           <button
             className='px-6 border-2 bg-emerald-700 border-emerald-500 rounded-lg'
             onClick={() => {
-              saveFile()
+              saveFile();
             }}
           >
             Save file
@@ -61,28 +146,36 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
           width="90vw"
           height="90vh"
           theme="vs-dark"
-          options={
-            { 
-              fontSize: editorFontSize,
-              tabCompletion: "on",
-              smoothScrolling: true,
-              cursorSmoothCaretAnimation: "on",
-              unicodeHighlight: {
-                ambiguousCharacters: true,
-                includeComments: true,
-                includeStrings: true,
-                invincibleCharacters: true
-              }
+          onMount={handleEditorDidMount}
+          options={{
+            fontSize: editorFontSize,
+            tabCompletion: "on",
+            smoothScrolling: true,
+            cursorSmoothCaretAnimation: "on",
+            readOnly: readOnly,
+            domReadOnly: readOnly,
+            readOnlyMessage: true,
+            unicodeHighlight: {
+              ambiguousCharacters: true,
+              includeComments: true,
+              includeStrings: true,
+              invincibleCharacters: true,
+              selectOnLineNumbers: true,
+              autoClosingBrackets: 'always',
+              // formatOnType: true,
+              snippetSuggestions: 'inline',
+              suggestOnTriggerCharacters: true,
+              tabCompletion: 'on',
+              wordBasedSuggestions: true
             }
-          }
+          }}
           language={editorLanguage}
           value={fileContent}
           onChange={handleEditorChange}
         />
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-export default CodeEditor
+export default CodeEditor;
