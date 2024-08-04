@@ -1,11 +1,13 @@
 import Editor from '@monaco-editor/react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { htmlSnippets } from './snippets/htmlSnippets';
 import { jsSnippets } from './snippets/jsSnippets';
+import { yamlSnippets } from './snippets/yamlSnippets';
 import theme from './themes/theme.json'
 
 const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile, title, readOnly }) => {
   const [editorFontSize, setEditorFontSize] = useState(18);
+  const [minimap, setMinimap] = useState(true);
   const editorRef = useRef(null);
 
 
@@ -14,6 +16,7 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
     editorRef.current = editor;
 
     monaco.editor.defineTheme('vs-dark', theme);
+
     monaco.languages.registerCompletionItemProvider('html', {
       provideCompletionItems: (model, position) => {
         let suggestions = htmlSnippets(monaco);
@@ -54,7 +57,12 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
         return { suggestions: suggestions };
       }
     });
-    console.log("Editor log", editor);
+    monaco.languages.registerCompletionItemProvider('yaml', {
+      provideCompletionItems: () => {
+        let suggestions = yamlSnippets(monaco)
+        return { suggestions: suggestions };
+      }
+    });
 
     editor.onDidChangeModelContent((event) => {
       if (readOnly) {
@@ -80,12 +88,13 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
   useEffect(() => {
     console.log("readonly changed", readOnly);
     console.log(editorRef);
-
-
     if (editorRef.current) {
       console.log("Must be updated");
       console.log(readOnly);
-
+      const position = editorRef.current.getPosition();
+      
+      editorRef.current.getModel().setValue(fileContent);
+      editorRef.current.setPosition(position);
       editorRef.current.updateOptions({ readOnly: readOnly })
     }
 
@@ -106,7 +115,7 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
           <h1 className='text-lg italic'>Mode:</h1>
           <select
             className='bg-slate-600 font-bold text-lg px-5'
-            value={editorLanguage}
+            value={minimap}
             onChange={(e) => {
               setEditorLanguage(e.target.value);
             }}
@@ -131,14 +140,25 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
             <option value="mysql">MYSQL</option>
             <option value="plaintext">Plain text</option>
           </select>
-          <button
+          <h1 className='text-lg italic'>Minimap:</h1>
+          <select
+            className='bg-slate-600 font-bold text-lg px-5'
+            value={minimap}
+            onChange={(e) => {
+              setMinimap(e.target.value);
+            }}
+          >
+            <option value={true}>Enabled</option>
+            <option value={false}>Disabled</option>
+          </select>
+          {/* <button
             className='px-6 border-2 bg-emerald-700 border-emerald-500 rounded-lg'
             onClick={() => {
               saveFile();
             }}
           >
             Save file
-          </button>
+          </button> */}
           <h1 className='text-amber-200 text-xl'>{response}</h1>
         </div>
         <Editor
@@ -154,7 +174,16 @@ const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fil
             cursorSmoothCaretAnimation: "on",
             readOnly: readOnly,
             domReadOnly: readOnly,
+            quickSuggestions: true,
+            suggestOnTriggerCharacters: true,
             readOnlyMessage: true,
+            minimap: {
+              enabled: minimap,
+              renderCharacters: false, // Karakterleri render etmeyi devre dışı bırakma
+              maxColumn: 120 // Minimap'taki sütun sayısını sınırla
+            },
+            scrollBeyondLastLine: false,
+            renderWhitespace: 'none',
             unicodeHighlight: {
               ambiguousCharacters: true,
               includeComments: true,
