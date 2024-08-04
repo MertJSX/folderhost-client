@@ -72,7 +72,7 @@ const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem,itemInf
   }
 
   return (
-    <div className='flex flex-col bg-gray-700 mt-4 gap-3 w-2/3 mx-auto p-4 min-w-[600px] max-w-[60%] min-h-[45vh] max-h-[65vh] shadow-2xl'>
+    <div className='flex flex-col bg-gray-700 mt-4 gap-3 w-2/3 mx-auto p-4 min-w-[600px] max-w-[60%] min-h-[600px] max-h-[700px] shadow-2xl'>
       <div className='flex gap-2'>
       {
         directory ?
