@@ -24,14 +24,21 @@ export const jsSnippets = (monaco) => {
         {
             label: 'log',
             kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: `console.log(\$1);`,
+            insertText: `console.log(\${1:});`,
             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
             documentation: 'Console log output'
         },
         {
+            label: 'warn',
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: `console.warn(\${1:});`,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: 'Console warn output'
+        },
+        {
             label: 'error',
             kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: `console.error(\$1);`,
+            insertText: `console.error(\${1:});`,
             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
             documentation: 'Console error output'
         }
