@@ -8,7 +8,7 @@ import Cookies from 'js-cookie';
 
 const DropdownMenu = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedOption, setSelectedOption] = useState(Cookies.get("mode") || "Balanced");
+    const [selectedOption, setSelectedOption] = useState(Cookies.get("mode") || "Optimized mode");
     const dropdownRef = useRef(null);
     //const iconSize = "8vh";
     const iconSize = 100;
@@ -61,7 +61,7 @@ const DropdownMenu = () => {
         if (Cookies.get("mode")) {
             setSelectedOption(Cookies.get("mode"))
         } else {
-            setSelectedOption(options[0].title)
+            setSelectedOption(options[2].title)
             Cookies.set("mode", selectedOption)
         }
     }, [])
