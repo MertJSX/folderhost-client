@@ -6,36 +6,35 @@ import Cookies from 'js-cookie';
 
 const Login = () => {
     const [ip, setIp] = useState(window.location.origin);
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [err, setErr] = useState("")
     const navigate = useNavigate();
 
     function verifyPassword() {
-        axios.get(ip + `/api/verify-password?password=${password}`).then((data) => {
+        axios.post(ip + `/api/verify-password`, {
+            username: username,
+            password: password
+        }).then((data) => {
             console.log(data);
             if (data.data.res) {
                 Cookies.set("ip", ip);
+                Cookies.set("username", username);
                 Cookies.set("password", password);
-                // navigate(`/explorer/${encodeURIComponent("./")}`);
+                // navigate(`/explorer/${encodeURIComponent("./")}`); // useless for now
                 navigate('/');
-            } else {
-                setPassword("")
-                setErr(data.data.err)
-                setTimeout(() => {
-                    setErr("")
-                }, 2000);
             }
         }).catch((err) => {
             if (err.response) {
                 console.error(err.response.data.err);
                 setErr(err.response.data.err)
                 setTimeout(() => {
-                  setErr("")
+                    setErr("")
                 }, 5000);
-              } else {
+            } else {
                 console.log(err);
                 setErr("Cannot connect to the server!")
-              }
+            }
         })
     }
 
@@ -56,6 +55,15 @@ const Login = () => {
                     value={ip}
                     onChange={(e) => {
                         setIp(e.target.value)
+                    }}
+                />
+                <input
+                    type="text"
+                    className='bg-slate-600 rounded w-2/3 text-center m-1 text-2xl min-w-[300px]'
+                    placeholder='Username'
+                    value={username}
+                    onChange={(e) => {
+                        setUsername(e.target.value)
                     }}
                 />
                 <input

@@ -28,6 +28,8 @@ const UploadFile = () => {
   function uploadFile() {
     let formData = new FormData();
     formData.append('file', file)
+    formData.append('username', Cookies.get("username"));
+    formData.append('password', Cookies.get("password"));
     setRes("");
     setErr("");
     setUploadProgress(0);
