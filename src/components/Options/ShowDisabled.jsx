@@ -1,33 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PiSpeedometerBold } from "react-icons/pi";
-import { IoDiamond } from "react-icons/io5";
-import { FaBalanceScale } from "react-icons/fa";
+import { BiShow } from "react-icons/bi";
+import { BiHide } from "react-icons/bi";
 import { FaArrowLeft } from "react-icons/fa";
 import { FaArrowDown } from "react-icons/fa";
 import Cookies from 'js-cookie';
 
-const DropdownMenu = () => {
+const ShowDisabled = ({setShowDisabled}) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedOption, setSelectedOption] = useState(Cookies.get("mode") || "Optimized mode");
+    const [selectedOption, setSelectedOption] = useState(null);
     const dropdownRef = useRef(null);
     const iconSize = 100;
-    const onButtonSize = 20;
+    const buttonSize = 20;
 
     const options = [
         {
-            mode: "balanced",
-            title: 'Balanced mode',
-            description: "You won't get folder size information for child directories, but you won't be slower like the Quality mode."
+            mode: "show",
+            title: 'Show disabled',
+            description: "This option will show disabled buttons that you don't have access."
         },
         {
-            mode: "quality",
-            title: 'Quality mode',
-            description: 'This is the slowest plan, but you will get all the folder size and file size information.'
-        },
-        {
-            mode: "optimized",
-            title: 'Optimized mode',
-            description: "You will get faster loading, but you won't be able to get folder size information!"
+            mode: "hide",
+            title: 'Hide disabled',
+            description: "This option will hide disabled buttons that you don't have access. (Recommended)"
         }
 
     ];
@@ -37,9 +31,14 @@ const DropdownMenu = () => {
     };
 
     const handleOptionClick = (option) => {
+        if (option.mode === "show") {
+            Cookies.set("show-disabled", true);
+        } else {
+            Cookies.set("show-disabled", false);
+        }
         setSelectedOption(option.title);
         setIsOpen(false);
-        Cookies.set("mode", option.title);
+        setShowDisabled(Cookies.get("show-disabled"))
     };
 
     const handleOutsideClick = (event) => {
@@ -56,12 +55,22 @@ const DropdownMenu = () => {
     }, []);
 
     useEffect(() => {
-        if (Cookies.get("mode")) {
-            setSelectedOption(Cookies.get("mode"))
+        console.log(Cookies.get("show-disabled"));
+        console.log(typeof Cookies.get("show-disabled"));
+        let option = Cookies.get("show-disabled");
+        
+
+        if (option !== undefined) {
+            if (option === "true") {
+                setSelectedOption(options[0].title)
+            } else {
+                setSelectedOption(options[1].title)
+            }
         } else {
-            setSelectedOption(options[2].title)
-            Cookies.set("mode", selectedOption)
+            setSelectedOption(options[1].title)
+            Cookies.set("show-disabled", false)
         }
+
     }, [])
 
     return (
@@ -70,14 +79,12 @@ const DropdownMenu = () => {
                 onClick={toggleDropdown}
                 className="inline-flex justify-between items-center w-48 px-3 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-700 focus:outline-none"
             >
-                {selectedOption === "Optimized mode" ? 
-                    <PiSpeedometerBold size={onButtonSize} /> :
-                    selectedOption === "Quality mode" ?
-                    <IoDiamond size={onButtonSize} /> :
-                    <FaBalanceScale size={onButtonSize} />
+                {selectedOption === "Show disabled" ?
+                    <BiShow size={buttonSize} /> :
+                    <BiHide size={buttonSize} />
                 }
                 {selectedOption}
-                {isOpen ? <FaArrowDown size={onButtonSize - 5} /> : <FaArrowLeft size={onButtonSize - 5} />}
+                {isOpen ? <FaArrowDown size={buttonSize - 5} /> : <FaArrowLeft size={buttonSize - 5} />}
             </button>
 
             {isOpen && (
@@ -89,12 +96,10 @@ const DropdownMenu = () => {
                                 className="flex items-start px-4 py-2 text-sm text-white hover:bg-gray-800 cursor-pointer border-2 border-sky-700"
                                 onClick={() => handleOptionClick(option)}
                             >
-                                {option.mode === "optimized" ? (
-                                    <PiSpeedometerBold className="p-2" size={iconSize} />
-                                ) : option.mode === "quality" ? (
-                                    <IoDiamond className="p-2" size={iconSize} />
+                                {option.mode === "show" ? (
+                                    <BiShow className="p-2" size={iconSize} />
                                 ) : (
-                                    <FaBalanceScale className="p-2" size={iconSize} />
+                                    <BiHide className="p-2" size={iconSize} />
                                 )}
                                 <div className="ml-4">
                                     <h1 className="text-lg">{option.title}</h1>
@@ -109,4 +114,4 @@ const DropdownMenu = () => {
     );
 };
 
-export default DropdownMenu;
+export default ShowDisabled;

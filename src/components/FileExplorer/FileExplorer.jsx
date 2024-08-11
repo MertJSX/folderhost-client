@@ -10,10 +10,13 @@ import { FaCss3 } from "react-icons/fa";
 import { IoLogoJavascript } from "react-icons/io";
 import { IoMdArrowBack } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
+import { FaJava } from "react-icons/fa";
+import { FaMusic } from "react-icons/fa";
+import { BiMoviePlay } from "react-icons/bi";
 import Cookies from 'js-cookie';
 import convertToBytes from '../../utils/convertToBytes';
 
-const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem,itemInfo, setItemInfo, isEmpty, readDir, getParent, response }) => {
+const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem, itemInfo, setItemInfo, isEmpty, readDir, getParent, response, downloading, waitingResponse }) => {
   const [draggedItem, setDraggedItem] = useState({});
   const [dropTarget, setDropTarget] = useState("");
   const childElements = useRef([]);
@@ -68,115 +71,114 @@ const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem,itemInf
     if (e && !childElements.current.includes(e)) {
       childElements.current.push(e);
     }
-
   }
 
   return (
-    <div className='flex flex-col bg-gray-700 mt-4 gap-3 w-2/3 mx-auto p-4 min-w-[600px] max-w-[60%] min-h-[600px] max-h-[700px] shadow-2xl'>
+    <div className='flex flex-col resize overflow-auto bg-gray-700 mt-4 gap-3 w-3/5 mx-auto p-4 min-w-[600px] min-h-[600px] h-[700px] max-h-[800px] shadow-2xl'>
       <div className='flex gap-2'>
-      {
-        directory ?
-          (
-            <button
-              className='bg-gray-600 w-auto flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90 rounded-full'
-              ref={previousDirRef}
-              onDragOver={(event) => {
-                event.preventDefault()
-              }}
-              onDrop={(event) => {
-                event.preventDefault();
-                if (draggedItem.isDirectory) {
-                  let parentOfDir = draggedItem.parentPath;
-                  parentOfDir = getParent(parentOfDir.slice(0, -1));
-                  moveItem(draggedItem.path, parentOfDir)
-                } else {
-                  moveItem(draggedItem.path, getParent(getParent(draggedItem.path)))
-                }
-              }}
-              onDragEnter={(event) => {
-                if (event.relatedTarget && previousDirRef.current.contains(event.relatedTarget)) {
-                  event.preventDefault()
-                  return;
-                }
-                previousDirRef.current.classList.remove("border-gray-600")
-                previousDirRef.current.classList.add("border-emerald-400")
-              }}
-              onDragLeave={(event) => {
-                if (event.relatedTarget && previousDirRef.current.contains(event.relatedTarget)) {
-                  event.preventDefault()
-                  return
-                }
-                if (previousDirRef.current.classList.contains("border-emerald-400")) {
-                  previousDirRef.current.classList.remove("border-emerald-400")
-                  previousDirRef.current.classList.add("border-gray-600")
-                }
-                console.log("Leave event!");
-              }}
-              onClick={() => {
-                readDir(true)
-              }}
-            >
-              <IoMdArrowBack size={22} className='mx-2' />
-              {/* <h1 className='text-lg'>{"<--"}</h1> */}
-            </button>
-          ) : isEmpty ?
+        {
+          directory ?
             (
-              <button className='bg-gray-600 w-1/4 flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90'
+              <button
+                className='bg-gray-600 w-auto flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90 rounded-full'
+                ref={previousDirRef}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  if (draggedItem.isDirectory) {
+                    let parentOfDir = draggedItem.parentPath;
+                    parentOfDir = getParent(parentOfDir.slice(0, -1));
+                    moveItem(draggedItem.path, parentOfDir)
+                  } else {
+                    moveItem(draggedItem.path, getParent(getParent(draggedItem.path)))
+                  }
+                }}
+                onDragEnter={(event) => {
+                  if (event.relatedTarget && previousDirRef.current.contains(event.relatedTarget)) {
+                    event.preventDefault()
+                    return;
+                  }
+                  previousDirRef.current.classList.remove("border-gray-600")
+                  previousDirRef.current.classList.add("border-emerald-400")
+                }}
+                onDragLeave={(event) => {
+                  if (event.relatedTarget && previousDirRef.current.contains(event.relatedTarget)) {
+                    event.preventDefault()
+                    return
+                  }
+                  if (previousDirRef.current.classList.contains("border-emerald-400")) {
+                    previousDirRef.current.classList.remove("border-emerald-400")
+                    previousDirRef.current.classList.add("border-gray-600")
+                  }
+                  console.log("Leave event!");
+                }}
                 onClick={() => {
                   readDir(true)
                 }}
               >
-                <FaFolder size={22} className='mx-2' />
                 <IoMdArrowBack size={22} className='mx-2' />
                 {/* <h1 className='text-lg'>{"<--"}</h1> */}
               </button>
-            ) : null
-      }
-      {
-        directoryInfo ? 
-        <div className='bg-gray-600 w-auto flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90'
-                onClick={() => {
-                  setItemInfo(directoryInfo)
-                }}
-              >
-                <FaFolderOpen size={22} className='mx-2' />
-                <h1 className='text-base text-gray-300 mr-2'>{directoryInfo.name}</h1>
-                {/* <h1 className='text-lg'>{"<--"}</h1> */}
-        </div> : null
+            ) : isEmpty ?
+              (
+                <button className='bg-gray-600 w-1/4 flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90'
+                  onClick={() => {
+                    readDir(true)
+                  }}
+                >
+                  <FaFolder size={22} className='mx-2' />
+                  <IoMdArrowBack size={22} className='mx-2' />
+                  {/* <h1 className='text-lg'>{"<--"}</h1> */}
+                </button>
+              ) : null
+        }
+        {
+          directoryInfo ?
+            <div className='bg-gray-600 w-auto flex flex-row items-center justify-center cursor-pointer p-1 pl-2 shadow-2xl select-none hover:opacity-90'
+              onClick={() => {
+                setItemInfo(directoryInfo)
+              }}
+            >
+              <FaFolderOpen size={22} className='mx-2' />
+              <h1 className='text-base text-gray-300 mr-2'>{directoryInfo.name}</h1>
+              {/* <h1 className='text-lg'>{"<--"}</h1> */}
+            </div> : null
 
-      }
+        }
       </div>
       <hr className='h-px bg-sky-400 border-0' />
       <div className='flex gap-2 mb-0'>
-        <h1 
-        className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
-        onClick={() => {
-          let sortedItems = [...directory].sort((a, b) => a.name.localeCompare(b.name))
-          .map((file, index) => ({
-            ...file, id: index
-          }))
-          setDirectory(sortedItems)
-        }}
+        <h1
+          className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
+          onClick={() => {
+            let sortedItems = [...directory].sort((a, b) => a.name.localeCompare(b.name))
+              .map((file, index) => ({
+                ...file, id: index
+              }))
+            setDirectory(sortedItems)
+          }}
         >Name</h1>
-        <h1 
-        className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
-        onClick={() => {
-          let sortedItems = [...directory].sort((a, b) => new Date(b.dateModified) - new Date(a.dateModified))
-          .map((file, index) => ({
-            ...file, id: index
-          }))
-          setDirectory(sortedItems)
-        }}
+        <h1
+          className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
+          onClick={() => {
+            let sortedItems = [...directory].sort((a, b) => new Date(b.dateModified) - new Date(a.dateModified))
+              .map((file, index) => ({
+                ...file, id: index
+              }))
+            setDirectory(sortedItems)
+          }}
         >Date</h1>
-        <h1 
-        className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
-        onClick={() => {
-          let sortedItems = [...directory].sort((a, b) => convertToBytes(b.size) - convertToBytes(a.size))
-          .map((file, index) => ({
-            ...file, id: index
-          }))
-          setDirectory(sortedItems);
-        }}
+        <h1
+          className="bg-gray-600 text-center w-2/6 cursor-pointer hover:border-sky-400 border-t-2 border-gray-600"
+          onClick={() => {
+            let sortedItems = [...directory].sort((a, b) => convertToBytes(b.size) - convertToBytes(a.size))
+              .map((file, index) => ({
+                ...file, id: index
+              }))
+            setDirectory(sortedItems);
+          }}
         >Size</h1>
       </div>
       <div className='flex flex-col gap-2 overflow-hidden overflow-y-scroll'>
@@ -233,12 +235,9 @@ const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem,itemInf
                 }}
                 key={element.id}
                 onClick={() => {
-                  // if (childElements.current[selectedChildEl].classList.contains("border-sky-400")) {
-                  //   childElements.current[selectedChildEl].classList.remove("border-sky-400")
-                  // }
-                  // childElements.current[element.id].classList.add("border-sky-400")
-                  // setSelectedChildEl(element.id);
-                  setItemInfo(element);
+                  if (!waitingResponse && !downloading) {
+                    setItemInfo(element);
+                  }
                 }}
                 onDoubleClick={() => {
                   if (element.isDirectory) {
@@ -257,16 +256,23 @@ const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem,itemInf
                       <FaFileImage size={22} className='mx-2' />
                       : element.name.split(".").pop() === "pdf" ?
                         <FaFilePdf size={22} className='mx-2' />
-                        : element.name.split(".").pop() === "rar" ||
-                          element.name.split(".").pop() === "zip" ?
-                          <FaFileArchive size={22} className='mx-2' />
-                          : element.name.split(".").pop() === "html" ?
-                            <FaHtml5 size={22} className='mx-2' />
-                            : element.name.split(".").pop() === "css" ?
-                              <FaCss3 size={22} className='mx-2' />
-                              : element.name.split(".").pop() === "js" ?
-                                <IoLogoJavascript size={22} className='mx-2' /> :
-                                <FaFileAlt size={22} className='mx-2' />
+                        : element.name.split(".").pop() === "mp3" ?
+                          <FaMusic size={22} className='mx-2' />
+                          : element.name.split(".").pop() === "mp4" ?
+                            <BiMoviePlay size={22} className='mx-2' />
+                            : element.name.split(".").pop() === "rar" ||
+                              element.name.split(".").pop() === "zip" ?
+                              <FaFileArchive size={22} className='mx-2' />
+                              : element.name.split(".").pop() === "java" ||
+                                element.name.split(".").pop() === "jar" ?
+                                <FaJava size={22} className='mx-2' />
+                                : element.name.split(".").pop() === "html" ?
+                                  <FaHtml5 size={22} className='mx-2' />
+                                  : element.name.split(".").pop() === "css" ?
+                                    <FaCss3 size={22} className='mx-2' />
+                                    : element.name.split(".").pop() === "js" ?
+                                      <IoLogoJavascript size={22} className='mx-2' /> :
+                                      <FaFileAlt size={22} className='mx-2' />
                 }
                 {/* <h1 className='text-lg text-wrap w-1/3'>{element.name.length > 18 ? `${element.name.slice(0, 19)} (...)` : element.name}</h1> */}
                 <h1 className='text-lg text-left text-wrap break-words w-1/3'>{element.name}</h1>

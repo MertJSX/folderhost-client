@@ -23,28 +23,17 @@ const CodeEditorPage = () => {
 
         socket.current.emit("change-file", { path: path.slice(1), content: value })
     }
-    function readFile(isUpdate = false) {
-        axios.post(`${Cookies.get("ip")}/api/read-file?filepath=${path.slice(1)}`, 
-        { username: Cookies.get("username"), password: Cookies.get("password") }).then((data) => {
-            console.log(data.data);
-            if (data.data.res) {
-                if (isUpdate) {
-                    // setFileContent(data.data.data);
-                    console.log(data.data);
-                    socket.current.emit("change-file", { path: path.slice(1), content: data.data.data })
-                    setRes("Updated!")
-                    setReadOnly(!data.data.writePermission)
-                    setTimeout(() => {
-                        setRes("")
-                    }, 1000);
-                } else {
+    function readFile() {
+        axios.post(`${Cookies.get("ip")}/api/read-file?filepath=${path.slice(1)}`,
+            { username: Cookies.get("username"), password: Cookies.get("password") }).then((data) => {
+                console.log(data.data);
+                if (data.data.res) {
                     setFileTitle(data.data.title);
                     setFileContent(data.data.data);
                     setReadOnly(!data.data.writePermission);
                     setEditorLanguage(detectFileLanguage());
                 }
-            }
-        })
+            })
     }
     function detectFileLanguage() {
         const extensionToLanguageMap = {
@@ -81,7 +70,7 @@ const CodeEditorPage = () => {
 
     useEffect(() => {
         if (!socket.current) {
-            socket.current = io(Cookies.get("ip"), { auth: { password: Cookies.get("password"), watch: path.slice(1) } });
+            socket.current = io(Cookies.get("ip"), { auth: { username: Cookies.get("username"), password: Cookies.get("password"), watch: path.slice(1) } });
             socket.current.on('connect_error', (err) => {
                 console.error("Socket connect error");
                 setTimeout(() => {
@@ -132,7 +121,6 @@ const CodeEditorPage = () => {
                 setEditorLanguage={setEditorLanguage}
                 fileContent={fileContent}
                 response={res}
-                saveFile={saveFile}
                 title={fileTitle}
                 readOnly={readOnly}
             />

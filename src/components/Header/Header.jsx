@@ -22,6 +22,7 @@ const Header = (props) => {
                 className='bg-slate-600 px-4 rounded-xl border-2 border-sky-600 hover:border-sky-700 active:bg-slate-700 font-bold'
                 onClick={() => {
                     Cookies.remove("ip");
+                    Cookies.remove("username");
                     Cookies.remove("password");
                     navigate("/login");
                 }}

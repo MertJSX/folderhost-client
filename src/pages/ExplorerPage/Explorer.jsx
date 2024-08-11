@@ -1,7 +1,7 @@
 import React from 'react'
 import Header from '../../components/Header/Header';
 import FileExplorer from '../../components/FileExplorer/FileExplorer';
-import Options from '../../components/Options/Options';
+import OptionsBar from '../../components/Options/OptionsBar';
 import ItemInfo from '../../components/DirItemInfo/ItemInfo';
 import { useState, useEffect, useRef } from 'react';
 import Cookies from 'js-cookie';
@@ -14,6 +14,8 @@ const ExplorerPage = () => {
   const params = useParams();
   const navigate = useNavigate();
   const [path, setPath] = useState(params.path);
+  const [permissions, setPermissions] = useState({});
+  const [showDisabled, setShowDisabled] = useState(Cookies.get("show-disabled"));
   const [directory, setDir] = useState([]);
   const [isEmpty, setIsEmpty] = useState(false);
   const [directoryInfo, setDirectoryInfo] = useState({})
@@ -24,6 +26,9 @@ const ExplorerPage = () => {
   const [unzipProgress, setUnzipProgress] = useState(0)
   const [connected, setConnected] = useState(false);
   const socket = useRef();
+  // Work states
+  const [downloading, setDownloading] = useState(false);
+  const [waitingResponse, setWaitingResponse] = useState(false);
 
   function getParent(filePath) {
     console.log(filePath);
@@ -87,7 +92,9 @@ const ExplorerPage = () => {
 
           socket.current.on('disconnect', (reason) => {
             console.log(`Disconnected from the server: ${reason}`);
-            socket.current = null;
+            if (reason !== "transport close") {
+              socket.current = null;
+            }
           });
         });
       }
@@ -96,29 +103,52 @@ const ExplorerPage = () => {
     }
   }, [])
 
-
-  function handleError(err) {
-    if (err.response) {
-      console.error(err.response.data.err);
-      setError(`Client: ${err.response.data.err}`);
-
-      setTimeout(() => {
-        setError("")
-      }, 5000);
+  function declareError(error, client = true) {
+    if (client) {
+      setError(`Client: ${error}`);
     } else {
-      console.log(err);
-      setError("Cannot connect to the server!")
+      setError(error);
+    }
+    setTimeout(() => {
+      setError("")
+    }, 5000);
+  }
+
+  function handleError(err, isErrorData) {
+    setWaitingResponse(false);
+    if (isErrorData && err.err) {
+      declareError(err.err)
+      return
+    }
+    if (isErrorData) {
+      declareError("Unknown error!")
+      return
+    }
+    if (err.response) {
+      declareError(err.response.data.err)
+    } else {
+      declareError("Cannot connect to the server!")
     }
   }
 
+  function waitPreviousAction() {
+    setError("You should wait!")
+    setTimeout(() => {
+      setError("")
+    }, 3000);
+  }
 
   function moveItem(oldPath, newPath) {
-    console.log("Old and newPath");
-    console.log(oldPath);
-    console.log(newPath);
+    if (downloading || waitingResponse) {
+      waitPreviousAction();
+      return
+    } else {
+      setWaitingResponse(true);
+    }
     axios.post(`${Cookies.get("ip")}/api/rename-file?oldFilepath=${oldPath.slice(1)}&newFilepath=${newPath.slice(1)}&type=move`,
       { username: Cookies.get("username"), password: Cookies.get("password") })
       .then((data) => {
+        setWaitingResponse(false)
         console.log(data);
         readDir();
       }).catch((err) => {
@@ -127,6 +157,12 @@ const ExplorerPage = () => {
   }
 
   function renameItem(item, newName) {
+    if (downloading || waitingResponse) {
+      waitPreviousAction();
+      return
+    } else {
+      setWaitingResponse(true);
+    }
     let oldPath = item.path.slice(1);
     let newPath = `${getParent(item.path.slice(0, -1))}`; // /${newName}
     if (newPath.slice(-1) === "/") {
@@ -138,6 +174,7 @@ const ExplorerPage = () => {
       { username: Cookies.get("username"), password: Cookies.get("password") })
       .then((data) => {
         console.log(data);
+        setWaitingResponse(false)
         if (item.isDirectory) {
           if (item.path === `${path}/`) {
             readDir(false, newPath)
@@ -154,6 +191,12 @@ const ExplorerPage = () => {
   }
 
   function downloadFile(filepath) {
+    if (downloading || waitingResponse) {
+      waitPreviousAction();
+      return
+    } else {
+      setDownloading(true);
+    }
     axios.post(`${Cookies.get("ip")}/api/download?filepath=${filepath.slice(1)}`,
       { username: Cookies.get("username"), password: Cookies.get("password") },
       {
@@ -170,6 +213,7 @@ const ExplorerPage = () => {
         }
       }).then((data) => {
         console.log(data);
+        setDownloading(false)
         setTimeout(() => {
           setDownloadProgress(100);
         }, 1000);
@@ -178,17 +222,34 @@ const ExplorerPage = () => {
         }, 5000);
         fileDownload(data.data, itemInfo.name)
       }).catch((err) => {
-        handleError(err)
+        setDownloading(false);
+        // console.log(err);
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const jsonData = JSON.parse(event.target.result);
+          handleError(jsonData, true)
+
+        };
+        reader.readAsText(err.response.data);
+
+        // handleError(errorData, true);
       })
   }
 
   function deleteItem(item) {
+    if (downloading || waitingResponse) {
+      waitPreviousAction();
+      return
+    } else {
+      setWaitingResponse(true);
+    }
     let newPath = `${getParent(item.path.slice(0, -1))}`;
     axios.post(`${Cookies.get("ip")}/api/delete?path=${item.path.slice(1)}`,
       { username: Cookies.get("username"), password: Cookies.get("password") }
     ).then((data) => {
       console.log(data);
-
+      setWaitingResponse(false)
       if (item.isDirectory) {
         if (item.path === `${path}/`) {
           readDir(false, newPath)
@@ -212,7 +273,37 @@ const ExplorerPage = () => {
     })
   }
 
+  function createCopy(item) {
+    if (downloading || waitingResponse) {
+      waitPreviousAction();
+      return
+    } else {
+      setWaitingResponse(true);
+    }
+    axios.post(`${Cookies.get("ip")}/api/create-copy?path=${item.path.slice(1)}`,
+      { username: Cookies.get("username"), password: Cookies.get("password") }
+    ).then((data) => {
+      console.log(data);
+      setWaitingResponse(false)
+      readDir()
+      if (data.data.response) {
+        setRes(data.data.response)
+        setTimeout(() => {
+          setRes("")
+        }, 5000);
+      }
+    }).catch((err) => {
+      handleError(err)
+    })
+  }
+
   function createItem(itempath, itemType, itemName) {
+    if (downloading || waitingResponse) {
+      waitPreviousAction();
+      return
+    } else {
+      setWaitingResponse(true);
+    }
     axios.post(`${Cookies.get("ip")}/api/write-file?path=${itempath.slice(1)}&type=create`, {
       itemType: itemType,
       itemName: itemName,
@@ -222,6 +313,7 @@ const ExplorerPage = () => {
       .then((data) => {
         console.log(data);
 
+        setWaitingResponse(false)
         readDir()
 
         if (data.data.response) {
@@ -237,18 +329,21 @@ const ExplorerPage = () => {
   }
 
   function readDir(asParentPath, pathInput) {
+    setWaitingResponse(false);
+    setDownloading(false);
     if (asParentPath && path !== "./") {
       setPath(getParent(path));
       setIsEmpty(false)
       setDir([]);
       setRes("");
-      axios.post(Cookies.get("ip") + `/api/read-dir?folder=${getParent(path).slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`,
+      axios.post(Cookies.get("ip") + `/api/read-dir?folder=${getParent(path).slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
         { username: Cookies.get("username"), password: Cookies.get("password") }
       )
         .then((data) => {
           console.log(data);
           setIsEmpty(data.data.isEmpty)
           setDir(data.data.data)
+          setPermissions(data.data.permissions)
           setDirectoryInfo(data.data.directoryInfo)
           setItemInfo(data.data.directoryInfo)
         }).catch((err) => {
@@ -257,12 +352,9 @@ const ExplorerPage = () => {
       return;
     } else if (pathInput === undefined && !asParentPath) {
       setDir([]);
-      // if (path.slice(-1) !== "/") {
-      //   setPath((prev) => prev + "/")
-      // }
       setIsEmpty(false)
       setRes("");
-      axios.post(Cookies.get("ip") + `/api/read-dir?folder=${path.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`,
+      axios.post(Cookies.get("ip") + `/api/read-dir?folder=${path.slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
         { username: Cookies.get("username"), password: Cookies.get("password") }
       ).then((data) => {
         console.log(data);
@@ -272,6 +364,7 @@ const ExplorerPage = () => {
         }
         setIsEmpty(data.data.isEmpty);
         setDir(data.data.data)
+        setPermissions(data.data.permissions)
         setDirectoryInfo(data.data.directoryInfo)
         setItemInfo(data.data.directoryInfo);
       }).catch((err) => {
@@ -282,13 +375,14 @@ const ExplorerPage = () => {
       setDir([]);
       setIsEmpty(false)
       setRes("");
-      axios.post(Cookies.get("ip") + `/api/read-dir?folder=${pathInput.slice(1)}&mode=${Cookies.get("mode") || "Balanced mode"}`,
+      axios.post(Cookies.get("ip") + `/api/read-dir?folder=${pathInput.slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
         { username: Cookies.get("username"), password: Cookies.get("password") }
       ).then((data) => {
         console.log(data);
         setPath(pathInput)
         setIsEmpty(data.data.isEmpty);
         setDir(data.data.data)
+        setPermissions(data.data.permissions)
         setDirectoryInfo(data.data.directoryInfo)
         setItemInfo(data.data.directoryInfo)
       }).catch((err) => {
@@ -302,12 +396,13 @@ const ExplorerPage = () => {
   return (
     <div className='home-container'>
       <Header />
-      <Options
+      <OptionsBar
         path={path}
         setPath={setPath}
         readDir={readDir}
         error={error}
         response={response}
+        setShowDisabled={setShowDisabled}
       />
       <div className="flex flex-row w-full justify-center items-center flex-wrap">
         <FileExplorer
@@ -323,6 +418,8 @@ const ExplorerPage = () => {
           moveItem={moveItem}
           getParent={getParent}
           directoryInfo={directoryInfo}
+          downloading={downloading}
+          waitingResponse={waitingResponse}
         />
         {
           Object.keys(itemInfo).length !== 0 ? (
@@ -333,10 +430,13 @@ const ExplorerPage = () => {
               downloadFile={downloadFile}
               downloadProgress={downloadProgress}
               deleteItem={deleteItem}
+              createCopy={createCopy}
               path={path}
               createItem={createItem}
               unzipProgress={unzipProgress}
               socket={socket}
+              permissions={permissions}
+              showDisabled={showDisabled}
             />
           ) : null
         }

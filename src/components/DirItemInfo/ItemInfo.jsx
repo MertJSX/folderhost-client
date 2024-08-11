@@ -10,9 +10,12 @@ import { FaHtml5 } from "react-icons/fa";
 import { FaCss3 } from "react-icons/fa";
 import { IoLogoJavascript } from "react-icons/io";
 import { FaFolderOpen } from "react-icons/fa6";
+import { FaJava } from "react-icons/fa";
+import { FaMusic } from "react-icons/fa";
+import { BiMoviePlay } from "react-icons/bi";
 import Cookies from 'js-cookie';
 
-const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, path, createItem, socket, unzipProgress }) => {
+const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, createCopy, path, createItem, socket, unzipProgress, permissions, showDisabled }) => {
   const renameInput = useRef(null)
   const [folderName, setFolderName] = useState("");
   const [fileName, setFileName] = useState("");
@@ -38,47 +41,60 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
                     <FaHtml5 size={logoSize} className='mx-2' />
                     : itemInfo.name.split(".").pop() === "css" ?
                       <FaCss3 size={logoSize} className='mx-2' />
-                      : itemInfo.name.split(".").pop() === "js" ?
-                        <IoLogoJavascript size={logoSize} className='mx-2' /> :
-                        <FaFileAlt size={logoSize} className='mx-2' />
+                      : itemInfo.name.split(".").pop() === "mp3" ?
+                        <FaMusic size={logoSize} className='mx-2' />
+                        : itemInfo.name.split(".").pop() === "mp4" ?
+                          <BiMoviePlay size={logoSize} className='mx-2' />
+                          : itemInfo.name.split(".").pop() === "java" ||
+                            itemInfo.name.split(".").pop() === "jar" ?
+                            <FaJava size={logoSize} className='mx-2' />
+                            : itemInfo.name.split(".").pop() === "js" ?
+                              <IoLogoJavascript size={logoSize} className='mx-2' /> :
+                              <FaFileAlt size={logoSize} className='mx-2' />
       }
       {
         itemInfo.path === "./" ?
           <h1
             title='The base folder cannot be renamed!'
             className='bg-transparent text-xl text-amber-300 font-bold text-wrap break-all text-center'
-
           >
             {itemInfo.name}
           </h1> :
-          <input
-            type='text'
-            ref={renameInput}
-            value={itemInfo.name}
-            title='Rename item'
-            onChange={(e) => {
-              setItemInfo((prev) => ({ ...prev, name: e.target.value }));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "/" ||
-                e.key === "\\" ||
-                e.key === ":" ||
-                e.key === "*" ||
-                e.key === "?" ||
-                e.key === "<" ||
-                e.key === ">" ||
-                e.key === "|"
-              ) {
-                e.preventDefault()
-              }
-              if (e.key === "Enter") {
-                console.log("Rename request");
-                renameItem(itemInfo, itemInfo.name)
-                renameInput.current.blur();
-              }
-            }}
-            className='bg-transparent text-xl text-amber-300 font-bold text-wrap break-all text-center'
-          />
+          !permissions.rename ?
+            <h1
+              title='No permission to rename this one!'
+              className='bg-transparent text-xl text-amber-300 font-bold text-wrap break-all text-center'
+            >
+              {itemInfo.name}
+            </h1> :
+            <input
+              type='text'
+              ref={renameInput}
+              value={itemInfo.name}
+              title='Rename item'
+              onChange={(e) => {
+                setItemInfo((prev) => ({ ...prev, name: e.target.value }));
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "/" ||
+                  e.key === "\\" ||
+                  e.key === ":" ||
+                  e.key === "*" ||
+                  e.key === "?" ||
+                  e.key === "<" ||
+                  e.key === ">" ||
+                  e.key === "|"
+                ) {
+                  e.preventDefault()
+                }
+                if (e.key === "Enter") {
+                  console.log("Rename request");
+                  renameItem(itemInfo, itemInfo.name)
+                  renameInput.current.blur();
+                }
+              }}
+              className='bg-transparent text-xl text-amber-300 font-bold text-wrap break-all text-center'
+            />
       }
 
 
@@ -86,19 +102,19 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
         Path: <span className="text-amber-200">{itemInfo.path}</span>
       </h1>
       {
-        (itemInfo.size && Cookies.get("mode") !== "Optimized mode") || (itemInfo.size && !itemInfo.isDirectory) ? (
-          <h1 className='text-gray-400'>Size:
-            <span className='text-amber-200'>
-              {
-                (itemInfo.size === "N/A" && Cookies.get("mode") === "Quality mode") || itemInfo.size === "N/A" ?
-                  "0 Bytes" : itemInfo.size
-              }
-            </span>
-          </h1>
-        ) : null
+        (itemInfo.size && (Cookies.get("mode") !== "Quality mode" && Cookies.get("mode") !== "Balanced mode")) && (itemInfo.size && itemInfo.isDirectory) ? (
+          null
+        ) : <h1 className='text-gray-400'>Size:
+          <span className='text-amber-200'>
+            {
+              (itemInfo.size === "N/A" && Cookies.get("mode") === "Quality mode") || (itemInfo.size === "N/A" && !itemInfo.isDirectory && Cookies.get("mode") === "Balanced mode") ?
+                " 0 Bytes" : ` ${itemInfo.size}`
+            }
+          </span>
+        </h1>
       }
       {
-        itemInfo.storage_limit && Cookies.get("mode") !== "Optimized mode" ?
+        itemInfo.storage_limit ?
           <h1 className='text-gray-400'>
             {"Limit: "}<span className='text-emerald-300'>{itemInfo.storage_limit}</span>
           </h1> : null
@@ -111,51 +127,76 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
       </h1>
       {!itemInfo.isDirectory ? (
         <div className='flex flex-col gap-2 w-5/6'>
-          <button
-            className='bg-red-600 px-6 font-bold rounded-xl'
-            title='Double click to delete.'
-            onDoubleClick={() => {
-              deleteItem(itemInfo)
-            }}
-          >Delete file</button>
-          <button
-            className='bg-sky-600 px-6 font-bold rounded-xl'
-            title='Double click to copy.'
-            onDoubleClick={() => {
-              console.log("Nothing happened...");
-            }}
-          >Create copy</button>
-
+          {
+            permissions.delete ?
+              <button
+                className='bg-red-600 px-6 font-bold rounded-xl'
+                title='Double click to delete.'
+                onDoubleClick={() => {
+                  deleteItem(itemInfo)
+                }}
+              >Delete file</button> : showDisabled === "true" ?
+              <button
+                className='bg-red-600 px-6 font-bold rounded-xl opacity-50'
+                title='No permission!'
+                disabled
+              >Delete file</button> : null
+          }
+          {
+            permissions.copy ?
+              <button
+                className='bg-sky-600 px-6 font-bold rounded-xl'
+                title='Click to create copy.'
+                onClick={() => {
+                  createCopy(itemInfo)
+                }}
+              >Create copy</button> : showDisabled === "true" ?
+              <button
+                className='bg-sky-600 px-6 font-bold rounded-xl opacity-50'
+                title='No permission!'
+                disabled
+              >Create copy</button> : null
+          }
           {itemInfo.name.split(".").pop() === "zip" && unzipProgress === 0 ?
-            <button
-              className='bg-yellow-600 px-6 font-bold rounded-xl'
-              title='Double click to unzip.'
-              onDoubleClick={() => {
-                console.log("Unzip");
-                if (socket !== null) {
-                  socket.current.emit("unzip", {
-                    path: itemInfo.path.slice(1),
-                    password: Cookies.get("password")
-                  })
-                }
-              }}
-            >Unzip</button>
+            (permissions.unzip ?
+              <button
+                className='bg-yellow-600 px-6 font-bold rounded-xl'
+                title='Click to unzip.'
+                onClick={() => {
+                  if (socket !== null) {
+                    socket.current.emit("unzip", {
+                      path: itemInfo.path.slice(1)
+                    })
+                  }
+                }}
+              >Unzip</button> : showDisabled === "true" ?
+              <button
+                className='bg-yellow-600 px-6 font-bold rounded-xl opacity-50'
+                title='No permission!'
+                disabled
+              >Unzip</button> : null)
             : itemInfo.name.split(".").pop() === "zip" && unzipProgress > 0 ?
-            <div>
-              <h1 className="text-center">{unzipProgress === 100 ? "Unzipped" : `Unzipping... ${unzipProgress}%`}</h1>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                <div className="bg-yellow-600 h-2.5 rounded-full" style={{ width: `${unzipProgress}%` }} />
-              </div>
-            </div> : null
+              <div>
+                <h1 className="text-center">{unzipProgress === 100 ? "Unzipped" : `Unzipping... ${unzipProgress}%`}</h1>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                  <div className="bg-yellow-600 h-2.5 rounded-full" style={{ width: `${unzipProgress}%` }} />
+                </div>
+              </div> : null
           }
           {!downloadProgress ?
-            <button
-              className='bg-emerald-600 px-6 font-bold rounded-xl'
-              title='Double click to upload.'
-              onClick={() => {
-                downloadFile(itemInfo.path)
-              }}
-            >Download</button>
+            permissions.download ?
+              <button
+                className='bg-emerald-600 px-6 font-bold rounded-xl'
+                title='Click to download.'
+                onClick={() => {
+                  downloadFile(itemInfo.path)
+                }}
+              >Download</button> : showDisabled === "true" ?
+              <button
+                className='bg-emerald-600 px-6 font-bold rounded-xl opacity-50'
+                title='No permission!'
+                disabled
+              >Download</button> : null
             :
             <div>
               <h1 className="text-center">{downloadProgress === 100 ? "Downloaded" : "Downloading..."}</h1>
@@ -165,17 +206,25 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
             </div>
 
           }
-          <a
-            href={`/editor/${encodeURIComponent(itemInfo.path)}`}
-            target="_blank" rel="noreferrer"
-            className='bg-sky-700 px-6 font-bold text-center rounded-xl'
-          >Open Editor</a>
+          {
+            permissions.read_files ?
+              <a
+                href={`/editor/${encodeURIComponent(itemInfo.path)}`}
+                target="_blank" rel="noreferrer"
+                className='bg-sky-700 px-6 font-bold text-center rounded-xl'
+              >Open Editor</a> : showDisabled === "true" ?
+              <button
+                className='bg-sky-700 px-6 font-bold text-center rounded-xl opacity-50'
+                disabled
+              >Open Editor</button> : null
+
+          }
         </div>
 
       ) :
         <div className="flex flex-col gap-2 w-5/6">
           {
-            itemInfo.path !== "./" ?
+            itemInfo.path !== "./" && permissions.delete ?
               <button
                 className='bg-red-600 hover:bg-red-700 px-6 font-bold rounded-xl'
                 title='Double click to delete.'
@@ -183,65 +232,89 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
                   deleteItem(itemInfo)
                 }}
               >Delete directory</button> :
-              null
+              itemInfo.path !== "./" && showDisabled === "true" ?
+                <button
+                  className='bg-red-600 px-6 font-bold rounded-xl opacity-50'
+                  title='No permission to delete!'
+                  disabled
+                >Delete directory</button> : null
           }
           {
-            itemInfo.path !== "./" ?
+            itemInfo.path !== "./" && permissions.copy && itemInfo.path !== (path.slice(-1) === "/" ? path : path + "/") ?
               <button
-                className='bg-amber-600 hover:bg-amber-700 px-6 font-bold rounded-xl'
-                title='Double click to zip.'
-                onDoubleClick={() => {
-                  deleteItem(itemInfo)
+                className='bg-sky-600 px-6 font-bold rounded-xl'
+                title='Click to create copy.'
+                onClick={() => {
+                  createCopy(itemInfo)
                 }}
-              >Zip</button> :
-              null
+              >Create copy</button>
+              : itemInfo.path !== "./" && itemInfo.path !== (path.slice(-1) === "/" ? path : path + "/") && showDisabled === "true" ?
+                <button
+                  className='bg-sky-600 px-6 font-bold rounded-xl opacity-50'
+                  title='No permission!'
+                  disabled
+                >Create copy</button> : null
           }
-
           {
             itemInfo.path === (path.slice(-1) === "/" ? path : path + "/") ?
               <div className='w-full flex flex-col gap-2'>
-                <a
-                  className='bg-purple-600 px-6 font-bold rounded-xl text-center'
-                  title='Click to upload.'
-                  target='_blank' rel="noreferrer"
-                  href={`/upload/${encodeURIComponent(itemInfo.path)}`}
-                >Upload new file</a>
-                <div className="flex flex-row">
-                  <input
-                    type="text"
-                    placeholder='folder name'
-                    className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
-                    value={folderName}
-                    onChange={(e) => {
-                      setFolderName(e.target.value)
-                    }}
-                  />
-                  <button
-                    className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
-                    onClick={() => {
-                      setFolderName("")
-                      createItem(itemInfo.path, "folder", folderName)
-                    }}
-                  >Create</button>
-                </div>
-                <div className="flex flex-row">
-                  <input
-                    type="text"
-                    placeholder='file name'
-                    className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
-                    value={fileName}
-                    onChange={(e) => {
-                      setFileName(e.target.value)
-                    }}
-                  />
-                  <button
-                    className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
-                    onClick={() => {
-                      setFileName("");
-                      createItem(itemInfo.path, "file", fileName)
-                    }}
-                  >Create</button>
-                </div>
+                {
+                  permissions.upload ?
+                    <a
+                      className='bg-purple-600 px-6 font-bold rounded-xl text-center'
+                      title='Click to upload.'
+                      target='_blank' rel="noreferrer"
+                      href={`/upload/${encodeURIComponent(itemInfo.path)}`}
+                    >Upload new file</a> : showDisabled === "true" ?
+                    <button
+                      className='bg-purple-600 px-6 font-bold rounded-xl text-center opacity-50 cursor-not-allowed'
+                      title='No permission to upload!'
+                    >Upload new file</button> : null
+                }
+
+                {
+                  permissions.create ?
+                    <div className='w-full flex flex-col gap-2'>
+                      <div className="flex flex-row">
+                        <input
+                          type="text"
+                          placeholder='folder name'
+                          className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
+                          value={folderName}
+                          onChange={(e) => {
+                            setFolderName(e.target.value)
+                          }}
+                        />
+                        <button
+                          className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
+                          onClick={() => {
+                            setFolderName("")
+                            createItem(itemInfo.path, "folder", folderName)
+                          }}
+                        >Create</button>
+                      </div>
+                      <div className="flex flex-row">
+                        <input
+                          type="text"
+                          placeholder='file name'
+                          className='bg-gray-600 w-2/3 text-center rounded-lg rounded-r-none'
+                          value={fileName}
+                          onChange={(e) => {
+                            setFileName(e.target.value)
+                          }}
+                        />
+                        <button
+                          className='bg-sky-700 rounded-r-lg w-1/3 hover:bg-sky-600'
+                          onClick={() => {
+                            setFileName("");
+                            createItem(itemInfo.path, "file", fileName)
+                          }}
+                        >Create</button>
+                      </div>
+                    </div> : showDisabled === "true" ?
+                    <h1 className='text-center text-lg text-yellow-200 opacity-50'>( No permission to create content )</h1> : null
+                }
+
               </div> : null
           }
 

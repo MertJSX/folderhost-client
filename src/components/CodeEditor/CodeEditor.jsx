@@ -5,7 +5,7 @@ import { jsSnippets } from './snippets/jsSnippets';
 import { yamlSnippets } from './snippets/yamlSnippets';
 import theme from './themes/theme.json'
 
-const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, saveFile, title, readOnly }) => {
+const CodeEditor = ({ editorLanguage, handleEditorChange, setEditorLanguage, fileContent, response, title, readOnly }) => {
   const [editorFontSize, setEditorFontSize] = useState(18);
   const [minimap, setMinimap] = useState(true);
   const editorRef = useRef(null);

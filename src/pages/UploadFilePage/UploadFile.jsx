@@ -11,6 +11,7 @@ const UploadFile = () => {
   const [file, setFile] = useState();
   const [res, setRes] = useState("");
   const [err, setErr] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
@@ -28,13 +29,19 @@ const UploadFile = () => {
   function uploadFile() {
     let formData = new FormData();
     formData.append('file', file)
-    formData.append('username', Cookies.get("username"));
-    formData.append('password', Cookies.get("password"));
+    // formData.append('username', Cookies.get("username"));
+    // formData.append('password', Cookies.get("password"));
     setRes("");
     setErr("");
     setUploadProgress(0);
-    axios.post(`${Cookies.get("ip")}/api/upload?password=${Cookies.get("password")}&path=${path.slice(1)}`, formData, {
+    axios.post(`${Cookies.get("ip")}/api/upload?path=${path.slice(1)}`, formData, {
+      headers: {
+        'username': Cookies.get("username"),
+        'password': Cookies.get("password")
+      },
       onUploadProgress: (progressEvent) => {
+        console.log(progressEvent);
+        
         if (progressEvent.progress === 1) {
           return;
         }
@@ -49,6 +56,7 @@ const UploadFile = () => {
           setUploadProgress(100);
         }, 1000);
         console.log(data);
+        setUploading(false)
         if (data.data.response) {
           setRes(data.data.response)
         }
@@ -56,8 +64,11 @@ const UploadFile = () => {
           setRes("");
         }, 3000);
       }).catch((err) => {
-        console.error(err.response);
-        setErr(err.response.data.err)
+        console.error(err);
+        if (err.response) {
+          console.error(err.response);
+          setErr(err.response.data.err)
+        }
       })
   }
 
@@ -69,6 +80,9 @@ const UploadFile = () => {
         response={res}
         error={err}
         uploadProgress={uploadProgress}
+        path={path}
+        uploading={uploading}
+        setUploading={setUploading}
       />
     </div>
   )
