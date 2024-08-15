@@ -50,10 +50,10 @@ const ExplorerPage = () => {
 
   useEffect(() => {
     console.log(getParent(path));
-    if (Cookies.get("ip") && Cookies.get("password") && Cookies.get("username")) {
+    if (Cookies.get("ip") && Cookies.get("token")) {
       readDir()
       if (!connected) {
-        socket.current = io(Cookies.get("ip"), { auth: { username: Cookies.get("username"), password: Cookies.get("password") } });
+        socket.current = io(Cookies.get("ip"), { auth: { token: Cookies.get("token") } });
         setConnected(true)
         socket.current.on('connect_error', (err) => {
           console.log("Socket connect error");
@@ -146,7 +146,7 @@ const ExplorerPage = () => {
       setWaitingResponse(true);
     }
     axios.post(`${Cookies.get("ip")}/api/rename-file?oldFilepath=${oldPath.slice(1)}&newFilepath=${newPath.slice(1)}&type=move`,
-      { username: Cookies.get("username"), password: Cookies.get("password") })
+      { token: Cookies.get("token") })
       .then((data) => {
         setWaitingResponse(false)
         console.log(data);
@@ -171,7 +171,7 @@ const ExplorerPage = () => {
       newPath = newPath + "/" + newName
     }
     axios.post(`${Cookies.get("ip")}/api/rename-file?oldFilepath=${oldPath}&newFilepath=${newPath.slice(1)}&type=rename`,
-      { username: Cookies.get("username"), password: Cookies.get("password") })
+      { token: Cookies.get("token") })
       .then((data) => {
         console.log(data);
         setWaitingResponse(false)
@@ -198,7 +198,7 @@ const ExplorerPage = () => {
       setDownloading(true);
     }
     axios.post(`${Cookies.get("ip")}/api/download?filepath=${filepath.slice(1)}`,
-      { username: Cookies.get("username"), password: Cookies.get("password") },
+      { token: Cookies.get("token") },
       {
         responseType: "blob",
         onDownloadProgress: (
@@ -246,7 +246,7 @@ const ExplorerPage = () => {
     }
     let newPath = `${getParent(item.path.slice(0, -1))}`;
     axios.post(`${Cookies.get("ip")}/api/delete?path=${item.path.slice(1)}`,
-      { username: Cookies.get("username"), password: Cookies.get("password") }
+      { token: Cookies.get("token") }
     ).then((data) => {
       console.log(data);
       setWaitingResponse(false)
@@ -281,7 +281,7 @@ const ExplorerPage = () => {
       setWaitingResponse(true);
     }
     axios.post(`${Cookies.get("ip")}/api/create-copy?path=${item.path.slice(1)}`,
-      { username: Cookies.get("username"), password: Cookies.get("password") }
+      { token: Cookies.get("token") }
     ).then((data) => {
       console.log(data);
       setWaitingResponse(false)
@@ -307,8 +307,7 @@ const ExplorerPage = () => {
     axios.post(`${Cookies.get("ip")}/api/write-file?path=${itempath.slice(1)}&type=create`, {
       itemType: itemType,
       itemName: itemName,
-      username: Cookies.get("username"),
-      password: Cookies.get("password")
+      token: Cookies.get("token")
     })
       .then((data) => {
         console.log(data);
@@ -337,7 +336,7 @@ const ExplorerPage = () => {
       setDir([]);
       setRes("");
       axios.post(Cookies.get("ip") + `/api/read-dir?folder=${getParent(path).slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
-        { username: Cookies.get("username"), password: Cookies.get("password") }
+        { token: Cookies.get("token") }
       )
         .then((data) => {
           console.log(data);
@@ -355,7 +354,7 @@ const ExplorerPage = () => {
       setIsEmpty(false)
       setRes("");
       axios.post(Cookies.get("ip") + `/api/read-dir?folder=${path.slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
-        { username: Cookies.get("username"), password: Cookies.get("password") }
+        { token: Cookies.get("token") }
       ).then((data) => {
         console.log(data);
         if (!data.data.data) {
@@ -376,7 +375,7 @@ const ExplorerPage = () => {
       setIsEmpty(false)
       setRes("");
       axios.post(Cookies.get("ip") + `/api/read-dir?folder=${pathInput.slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
-        { username: Cookies.get("username"), password: Cookies.get("password") }
+        { token: Cookies.get("token") }
       ).then((data) => {
         console.log(data);
         setPath(pathInput)
@@ -389,8 +388,6 @@ const ExplorerPage = () => {
         handleError(err)
       })
     }
-
-
   }
 
   return (

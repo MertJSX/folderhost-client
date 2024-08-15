@@ -19,8 +19,7 @@ const Login = () => {
             console.log(data);
             if (data.data.res) {
                 Cookies.set("ip", ip);
-                Cookies.set("username", username);
-                Cookies.set("password", password);
+                Cookies.set("token", data.data.token);
                 // navigate(`/explorer/${encodeURIComponent("./")}`); // useless for now
                 navigate('/');
             }

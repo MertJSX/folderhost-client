@@ -15,7 +15,7 @@ const UploadFile = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
-    if (!Cookies.get("ip") && !Cookies.get("password")) {
+    if (!Cookies.get("ip") && !Cookies.get("token")) {
       navigate("/login");
     }
   }, [])
@@ -29,15 +29,12 @@ const UploadFile = () => {
   function uploadFile() {
     let formData = new FormData();
     formData.append('file', file)
-    // formData.append('username', Cookies.get("username"));
-    // formData.append('password', Cookies.get("password"));
     setRes("");
     setErr("");
     setUploadProgress(0);
     axios.post(`${Cookies.get("ip")}/api/upload?path=${path.slice(1)}`, formData, {
       headers: {
-        'username': Cookies.get("username"),
-        'password': Cookies.get("password")
+        'token': Cookies.get("token")
       },
       onUploadProgress: (progressEvent) => {
         console.log(progressEvent);

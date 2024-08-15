@@ -25,7 +25,7 @@ const CodeEditorPage = () => {
     }
     function readFile() {
         axios.post(`${Cookies.get("ip")}/api/read-file?filepath=${path.slice(1)}`,
-            { username: Cookies.get("username"), password: Cookies.get("password") }).then((data) => {
+            { token: Cookies.get("token") }).then((data) => {
                 console.log(data.data);
                 if (data.data.res) {
                     setFileTitle(data.data.title);
@@ -61,7 +61,7 @@ const CodeEditorPage = () => {
         return extensionToLanguageMap[fileExtension] || "plaintext";
     }
     useEffect(() => {
-        if (Cookies.get("ip") && Cookies.get("password")) {
+        if (Cookies.get("ip") && Cookies.get("token")) {
             readFile(false)
         } else {
             navigate("/login");
@@ -70,7 +70,7 @@ const CodeEditorPage = () => {
 
     useEffect(() => {
         if (!socket.current) {
-            socket.current = io(Cookies.get("ip"), { auth: { username: Cookies.get("username"), password: Cookies.get("password"), watch: path.slice(1) } });
+            socket.current = io(Cookies.get("ip"), { auth: { token: Cookies.get("token"), watch: path.slice(1) } });
             socket.current.on('connect_error', (err) => {
                 console.error("Socket connect error");
                 setTimeout(() => {
