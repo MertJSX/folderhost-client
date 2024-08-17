@@ -28,10 +28,10 @@ const ExplorerPage = () => {
   const socket = useRef();
   // Work states
   const [downloading, setDownloading] = useState(false);
+  const [unzipping, setUnzipping] = useState(false);
   const [waitingResponse, setWaitingResponse] = useState(false);
 
   function getParent(filePath) {
-    console.log(filePath);
     let lastIndex = filePath.lastIndexOf('/');
     if (lastIndex === -1) return filePath;
 
@@ -49,14 +49,13 @@ const ExplorerPage = () => {
   }, [path])
 
   useEffect(() => {
-    console.log(getParent(path));
     if (Cookies.get("ip") && Cookies.get("token")) {
       readDir()
       if (!connected) {
         socket.current = io(Cookies.get("ip"), { auth: { token: Cookies.get("token") } });
         setConnected(true)
         socket.current.on('connect_error', (err) => {
-          console.log("Socket connect error");
+          console.error("Socket connect error");
           setTimeout(() => {
             setError(`Socket: ${err.message}`)
             setTimeout(() => {
@@ -66,15 +65,14 @@ const ExplorerPage = () => {
         });
 
         socket.current.on('connect', () => {
-          console.log('Connected to the server');
+          console.log('Connected to the server!');
 
           socket.current.on('unzip-progress', (res) => {
             setUnzipProgress(res.progress);
-            console.log(res);
           });
 
           socket.current.on('unzip-completed', (res) => {
-            console.log(res);
+            setUnzipping(false);
             setUnzipProgress(100)
             setTimeout(() => {
               setUnzipProgress(0)
@@ -83,7 +81,7 @@ const ExplorerPage = () => {
           });
 
           socket.current.on('error', (res) => {
-            console.log(res);
+            console.error(res);
             setError(res.err)
             setTimeout(() => {
               setError("")
@@ -91,7 +89,7 @@ const ExplorerPage = () => {
           });
 
           socket.current.on('disconnect', (reason) => {
-            console.log(`Disconnected from the server: ${reason}`);
+            console.warn(`Disconnected from the server: ${reason}`);
             if (reason !== "transport close") {
               socket.current = null;
             }
@@ -139,7 +137,7 @@ const ExplorerPage = () => {
   }
 
   function moveItem(oldPath, newPath) {
-    if (downloading || waitingResponse) {
+    if (downloading || waitingResponse || unzipping) {
       waitPreviousAction();
       return
     } else {
@@ -149,7 +147,6 @@ const ExplorerPage = () => {
       { token: Cookies.get("token") })
       .then((data) => {
         setWaitingResponse(false)
-        console.log(data);
         readDir();
       }).catch((err) => {
         handleError(err)
@@ -157,7 +154,7 @@ const ExplorerPage = () => {
   }
 
   function renameItem(item, newName) {
-    if (downloading || waitingResponse) {
+    if (downloading || waitingResponse || unzipping) {
       waitPreviousAction();
       return
     } else {
@@ -173,7 +170,6 @@ const ExplorerPage = () => {
     axios.post(`${Cookies.get("ip")}/api/rename-file?oldFilepath=${oldPath}&newFilepath=${newPath.slice(1)}&type=rename`,
       { token: Cookies.get("token") })
       .then((data) => {
-        console.log(data);
         setWaitingResponse(false)
         if (item.isDirectory) {
           if (item.path === `${path}/`) {
@@ -191,7 +187,7 @@ const ExplorerPage = () => {
   }
 
   function downloadFile(filepath) {
-    if (downloading || waitingResponse) {
+    if (downloading || waitingResponse || unzipping) {
       waitPreviousAction();
       return
     } else {
@@ -212,7 +208,6 @@ const ExplorerPage = () => {
           setDownloadProgress(Number(progress));
         }
       }).then((data) => {
-        console.log(data);
         setDownloading(false)
         setTimeout(() => {
           setDownloadProgress(100);
@@ -223,7 +218,6 @@ const ExplorerPage = () => {
         fileDownload(data.data, itemInfo.name)
       }).catch((err) => {
         setDownloading(false);
-        // console.log(err);
 
         const reader = new FileReader();
         reader.onload = function (event) {
@@ -238,7 +232,7 @@ const ExplorerPage = () => {
   }
 
   function deleteItem(item) {
-    if (downloading || waitingResponse) {
+    if (downloading || waitingResponse || unzipping) {
       waitPreviousAction();
       return
     } else {
@@ -248,7 +242,6 @@ const ExplorerPage = () => {
     axios.post(`${Cookies.get("ip")}/api/delete?path=${item.path.slice(1)}`,
       { token: Cookies.get("token") }
     ).then((data) => {
-      console.log(data);
       setWaitingResponse(false)
       if (item.isDirectory) {
         if (item.path === `${path}/`) {
@@ -274,7 +267,7 @@ const ExplorerPage = () => {
   }
 
   function createCopy(item) {
-    if (downloading || waitingResponse) {
+    if (downloading || waitingResponse || unzipping) {
       waitPreviousAction();
       return
     } else {
@@ -283,7 +276,6 @@ const ExplorerPage = () => {
     axios.post(`${Cookies.get("ip")}/api/create-copy?path=${item.path.slice(1)}`,
       { token: Cookies.get("token") }
     ).then((data) => {
-      console.log(data);
       setWaitingResponse(false)
       readDir()
       if (data.data.response) {
@@ -298,7 +290,7 @@ const ExplorerPage = () => {
   }
 
   function createItem(itempath, itemType, itemName) {
-    if (downloading || waitingResponse) {
+    if (downloading || waitingResponse || unzipping) {
       waitPreviousAction();
       return
     } else {
@@ -310,8 +302,6 @@ const ExplorerPage = () => {
       token: Cookies.get("token")
     })
       .then((data) => {
-        console.log(data);
-
         setWaitingResponse(false)
         readDir()
 
@@ -339,7 +329,6 @@ const ExplorerPage = () => {
         { token: Cookies.get("token") }
       )
         .then((data) => {
-          console.log(data);
           setIsEmpty(data.data.isEmpty)
           setDir(data.data.data)
           setPermissions(data.data.permissions)
@@ -356,7 +345,6 @@ const ExplorerPage = () => {
       axios.post(Cookies.get("ip") + `/api/read-dir?folder=${path.slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
         { token: Cookies.get("token") }
       ).then((data) => {
-        console.log(data);
         if (!data.data.data) {
           setRes(data.data.err)
           return;
@@ -377,7 +365,6 @@ const ExplorerPage = () => {
       axios.post(Cookies.get("ip") + `/api/read-dir?folder=${pathInput.slice(1)}&mode=${Cookies.get("mode") || "Optimized mode"}`,
         { token: Cookies.get("token") }
       ).then((data) => {
-        console.log(data);
         setPath(pathInput)
         setIsEmpty(data.data.isEmpty);
         setDir(data.data.data)
@@ -386,6 +373,19 @@ const ExplorerPage = () => {
         setItemInfo(data.data.directoryInfo)
       }).catch((err) => {
         handleError(err)
+      })
+    }
+  }
+
+  function startUnzipping() {
+    if (downloading || waitingResponse || unzipping) {
+      waitPreviousAction();
+      return
+    }
+    if (socket !== null) {
+      setUnzipping(true);
+      socket.current.emit("unzip", {
+        path: itemInfo.path.slice(1)
       })
     }
   }
@@ -416,6 +416,7 @@ const ExplorerPage = () => {
           getParent={getParent}
           directoryInfo={directoryInfo}
           downloading={downloading}
+          unzipping={unzipping}
           waitingResponse={waitingResponse}
         />
         {
@@ -431,9 +432,9 @@ const ExplorerPage = () => {
               path={path}
               createItem={createItem}
               unzipProgress={unzipProgress}
-              socket={socket}
               permissions={permissions}
               showDisabled={showDisabled}
+              startUnzipping={startUnzipping}
             />
           ) : null
         }

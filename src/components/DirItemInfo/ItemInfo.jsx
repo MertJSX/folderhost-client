@@ -15,7 +15,7 @@ import { FaMusic } from "react-icons/fa";
 import { BiMoviePlay } from "react-icons/bi";
 import Cookies from 'js-cookie';
 
-const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, createCopy, path, createItem, socket, unzipProgress, permissions, showDisabled }) => {
+const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadProgress, deleteItem, createCopy, path, createItem, unzipProgress, permissions, showDisabled, startUnzipping }) => {
   const renameInput = useRef(null)
   const [folderName, setFolderName] = useState("");
   const [fileName, setFileName] = useState("");
@@ -163,11 +163,7 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
                 className='bg-yellow-600 px-6 font-bold rounded-xl'
                 title='Click to unzip.'
                 onClick={() => {
-                  if (socket !== null) {
-                    socket.current.emit("unzip", {
-                      path: itemInfo.path.slice(1)
-                    })
-                  }
+                  startUnzipping()
                 }}
               >Unzip</button> : showDisabled === "true" ?
               <button
@@ -177,7 +173,7 @@ const ItemInfo = ({ itemInfo, setItemInfo, renameItem, downloadFile, downloadPro
               >Unzip</button> : null)
             : itemInfo.name.split(".").pop() === "zip" && unzipProgress > 0 ?
               <div>
-                <h1 className="text-center">{unzipProgress === 100 ? "Unzipped" : `Unzipping... ${unzipProgress}%`}</h1>
+                <h1 className="text-center">{unzipProgress === 100 ? "Unzipped" : unzipProgress >= 1 ? `Unzipping... ${unzipProgress}%` : "Unzipping..."}</h1>
                 <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
                   <div className="bg-yellow-600 h-2.5 rounded-full" style={{ width: `${unzipProgress}%` }} />
                 </div>

@@ -16,7 +16,7 @@ import { BiMoviePlay } from "react-icons/bi";
 import Cookies from 'js-cookie';
 import convertToBytes from '../../utils/convertToBytes';
 
-const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem, itemInfo, setItemInfo, isEmpty, readDir, getParent, response, downloading, waitingResponse }) => {
+const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem, itemInfo, setItemInfo, isEmpty, readDir, getParent, response, downloading, unzipping, waitingResponse }) => {
   const [draggedItem, setDraggedItem] = useState({});
   const [dropTarget, setDropTarget] = useState("");
   const childElements = useRef([]);
@@ -235,7 +235,7 @@ const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem, itemIn
                 }}
                 key={element.id}
                 onClick={() => {
-                  if (!waitingResponse && !downloading) {
+                  if (!waitingResponse && !downloading && !unzipping) {
                     setItemInfo(element);
                   }
                 }}
