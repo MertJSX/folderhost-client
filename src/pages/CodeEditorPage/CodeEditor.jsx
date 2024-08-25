@@ -1,10 +1,10 @@
 import React from 'react'
-import CodeEditor from '../../components/CodeEditor/CodeEditor';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useNavigate, useParams } from 'react-router-dom';
 import io from 'socket.io-client';
+import CodeEditorComp from '../../components/CodeEditor/CodeEditorComp';
 
 const CodeEditorPage = () => {
     const params = useParams();
@@ -12,16 +12,26 @@ const CodeEditorPage = () => {
     const [editorLanguage, setEditorLanguage] = useState("plaintext");
     const [fileContent, setFileContent] = useState("")
     const path = params.path;
-    const [res, setRes] = useState("")
+    const [res, setRes] = useState("");
     const [readOnly, setReadOnly] = useState(false);
     const [fileTitle, setFileTitle] = useState("")
     const socket = useRef();
+    const throttleTimeout = useRef(null);
+    const [throttleDelay, setThrottleDelay] = useState(Cookies.get("editor-throttle") || 200)
 
     function handleEditorChange(value, event) {
-        console.log("Editor change");
-        console.log(event);
+        const THROTTLE_DELAY = throttleDelay; // 200ms delay to throttle changes
 
-        socket.current.emit("change-file", { path: path.slice(1), content: value })
+        console.log(THROTTLE_DELAY);
+        
+
+        if (throttleTimeout.current) {
+            clearTimeout(throttleTimeout.current);
+        }
+
+        throttleTimeout.current = setTimeout(() => {
+            socket.current.emit("change-file", { path: path.slice(1), content: value });
+        }, THROTTLE_DELAY);
     }
     function readFile() {
         axios.post(`${Cookies.get("ip")}/api/read-file?filepath=${path.slice(1)}`,
@@ -74,7 +84,8 @@ const CodeEditorPage = () => {
             socket.current.on('connect_error', (err) => {
                 console.error("Socket connect error");
                 setTimeout(() => {
-                    setRes(`Socket: ${err.message}`)
+                    // setRes(`Socket: ${err.message}`)
+                    setRes(`Socket: Cannot connect to the server!`)
                     setTimeout(() => {
                         setRes("")
                     }, 5000);
@@ -96,7 +107,7 @@ const CodeEditorPage = () => {
                 });
                 socket.current.on('disconnect', (reason) => {
                     console.log(`Disconnected from the server: ${reason}`);
-                    socket.current = null;
+                    // socket.current = null;
                 });
             });
         }
@@ -114,8 +125,7 @@ const CodeEditorPage = () => {
 
     return (
         <div>
-
-            <CodeEditor
+            <CodeEditorComp
                 handleEditorChange={handleEditorChange}
                 editorLanguage={editorLanguage}
                 setEditorLanguage={setEditorLanguage}
@@ -123,6 +133,8 @@ const CodeEditorPage = () => {
                 response={res}
                 title={fileTitle}
                 readOnly={readOnly}
+                throttleDelay={throttleDelay}
+                setThrottleDelay={setThrottleDelay}
             />
         </div>
     )
