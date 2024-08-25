@@ -6,8 +6,8 @@ const Header = (props) => {
     let navigate = useNavigate();
     return (
         <div className='header-container flex flex-row items-center justify-center gap-5 bg-slate-800 p-2 fixed top-0 w-full border-b-2'>
-            <h1 className="text-left font-black text-2xl italic">
-                Web Panel
+            <h1 className="text-left font-black text-2xl italic select-none">
+                Folder Host
             </h1>
             {/* <h1 className="text-center w-1/5 bg-slate-700 text-orange-300">
                 {props.response}
