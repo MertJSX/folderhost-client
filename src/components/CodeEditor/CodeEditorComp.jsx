@@ -171,7 +171,7 @@ const CodeEditorComp = ({ editorLanguage, handleEditorChange, setEditorLanguage,
               <h1 className='text-lg italic text-nowrap'>Mode:</h1>
               <select
                 className='bg-slate-600 font-bold text-lg px-2 mx-2'
-                value={minimap}
+                value={editorLanguage}
                 onChange={(e) => {
                   setEditorLanguage(e.target.value);
                 }}
