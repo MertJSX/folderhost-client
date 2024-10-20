@@ -298,7 +298,13 @@ const FileExplorer = ({ directory, setDirectory, directoryInfo, moveItem, itemIn
                 <FaFolderOpen size={22} className='mx-2' />
                 <h1 className='text-lg'>Empty folder</h1>
               </div>
-            ) : <h1 className='text-2xl'>{response ? <span className='text-amber-200'>{response}</span> : "Loading..."}</h1>
+            ) : <h1 className='text-2xl'>{response ? <span className='text-amber-200'>{response}</span> : 
+            (
+              <div className='flex items-center justify-center'>
+                Loading
+                <img src='/loading2.gif' width={40} height={40} className='select-none' alt='' />
+              </div>
+            )}</h1>
         }
       </div>
 
