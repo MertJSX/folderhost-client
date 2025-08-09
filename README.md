@@ -1,5 +1,5 @@
-# 📁 Folder Host Client ([Folder Host](https://github.com/MertJSX/folder-host))
-This is client side of [Folder Host](https://github.com/MertJSX/folder-host).
+# 📁 Folderhost Client ([Folderhost](https://github.com/MertJSX/folderhost))
+This is client side of [Folderhost](https://github.com/MertJSX/folderhost).
 # Screenshots
 ## Explorer
 
